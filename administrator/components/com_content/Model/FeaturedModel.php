@@ -115,7 +115,7 @@ class FeaturedModel extends ArticlesModel
 
 		// Join over the parent categories.
 		$query->select(
-			'parent.title AS parent_category_title, parent.id AS parent_category_id, 
+			'parent.title AS parent_category_title, parent.id AS parent_category_id,
 			parent.created_user_id AS parent_category_uid, parent.level AS parent_category_level'
 		)
 			->join('LEFT', '#__categories AS parent ON parent.id = c.parent_id');
@@ -133,12 +133,10 @@ class FeaturedModel extends ArticlesModel
 			$db->quoteName(
 				[
 					'ws.title',
-					'ws.condition',
 					'ws.workflow_id'
 				],
 				[
 					'stage_title',
-					'stage_condition',
 					'workflow_id'
 				]
 			)

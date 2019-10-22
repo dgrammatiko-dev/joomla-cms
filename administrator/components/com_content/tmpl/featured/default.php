@@ -156,27 +156,28 @@ HTMLHelper::_('script', 'com_content/admin-articles-workflow-buttons.js', ['rela
 
 							$transitions = ContentHelper::filterTransitions($this->transitions, $item->stage_id, $item->workflow_id);
 
+							// @TODO Benjamin: solve via plugin
 							$publish = 0;
 							$unpublish = 0;
 							$archive = 0;
 							$trash = 0;
 
-							foreach ($transitions as $transition) :
-								switch ($transition['stage_condition']) :
-									case ContentComponent::CONDITION_PUBLISHED:
-										++$publish;
-										break;
-									case ContentComponent::CONDITION_UNPUBLISHED:
-										++$unpublish;
-										break;
-									case ContentComponent::CONDITION_ARCHIVED:
-										++$archive;
-										break;
-									case ContentComponent::CONDITION_TRASHED:
-										++$trash;
-										break;
-								endswitch;
-							endforeach;
+//							foreach ($transitions as $transition) :
+//								switch ($transition['stage_condition']) :
+//									case ContentComponent::CONDITION_PUBLISHED:
+//										++$publish;
+//										break;
+//									case ContentComponent::CONDITION_UNPUBLISHED:
+//										++$unpublish;
+//										break;
+//									case ContentComponent::CONDITION_ARCHIVED:
+//										++$archive;
+//										break;
+//									case ContentComponent::CONDITION_TRASHED:
+//										++$trash;
+//										break;
+//								endswitch;
+//							endforeach;
 
 							?>
 							<tr class="row<?php echo $i % 2; ?>" data-dragable-group="<?php echo $item->catid; ?>"
@@ -234,7 +235,7 @@ HTMLHelper::_('script', 'com_content/admin-articles-workflow-buttons.js', ['rela
 													->addState(ContentComponent::CONDITION_ARCHIVED, '', 'archive', 'COM_CONTENT_CHANGE_STAGE', ['tip_title' => 'JARCHIVED'])
 													->addState(ContentComponent::CONDITION_TRASHED, '', 'trash', 'COM_CONTENT_CHANGE_STAGE', ['tip_title' => 'JTRASHED'])
 													->setLayout('joomla.button.transition-button')
-													->render($item->stage_condition, $i, $options, $item->publish_up, $item->publish_down);
+													->render($item->state, $i, $options, $item->publish_up, $item->publish_down);
 										?>
 										</div>
 									</div>

@@ -51,7 +51,6 @@ class ArticlesModel extends ListModel
 				'checked_out_time', 'a.checked_out_time',
 				'catid', 'a.catid', 'category_title',
 				'state', 'a.state',
-				'stage_condition', 'ws.condition',
 				'access', 'a.access', 'access_level',
 				'created', 'a.created',
 				'created_by', 'a.created_by',
@@ -246,7 +245,7 @@ class ArticlesModel extends ListModel
 			->join('LEFT', '#__workflow_associations AS wa ON wa.item_id = a.id');
 
 		// Join over the states.
-		$query->select('ws.title AS state_title, ws.condition AS stage_condition')
+		$query->select('ws.title AS state_title')
 			->join('LEFT', '#__workflow_stages AS ws ON ws.id = wa.stage_id');
 
 		// Join over the categories.
@@ -286,36 +285,31 @@ class ArticlesModel extends ListModel
 		}
 
 		// Filter by published state
-		$condition = $this->getState('filter.condition');
+		$published = $this->getState('filter.published');
 
-		if (is_numeric($condition) && $condition == 2)
+		if (is_numeric($published) && $published == ContentComponent::CONDITION_ARCHIVED)
 		{
 			/**
 			 * If category is archived then article has to be published or archived.
 			 * Or categogy is published then article has to be archived.
 			 */
-			$query->where('((c.published = 2 AND ws.condition > ' . (int) ContentComponent::CONDITION_UNPUBLISHED .
-				') OR (c.published = 1 AND ws.condition = ' . (int) ContentComponent::CONDITION_ARCHIVED . '))'
+			$query->where('((c.published = 2 AND a.state > ' . (int) ContentComponent::CONDITION_UNPUBLISHED .
+				') OR (c.published = 1 AND a.state = ' . (int) ContentComponent::CONDITION_ARCHIVED . '))'
 			);
 		}
-		elseif (is_numeric($condition))
+		elseif (is_numeric($published))
 		{
 			// Category has to be published
-			$query->where("c.published = 1 AND ws.condition = " . $db->quote($condition));
+			$query->where("c.published = 1 AND a.state = " . $db->quote($published));
 		}
-		elseif (is_array($condition))
+		elseif (is_array($published))
 		{
-			$condition = array_map(
-				function ($data) use ($db)
-				{
-					return $db->quote($data);
-				},
-				$condition
-			);
-			$condition = implode(',', $condition);
+			$published = ArrayHelper::toInteger($published);
+
+			$published = implode(',', $published);
 
 			// Category has to be published
-			$query->where('c.published = 1 AND ws.condition IN (' . $condition . ')');
+			$query->where('c.published = 1 AND a.state IN (' . $published . ')');
 		}
 
 		// Filter by featured state

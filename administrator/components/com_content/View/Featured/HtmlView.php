@@ -96,6 +96,7 @@ class HtmlView extends BaseHtmlView
 			$this->filterForm->removeField('language', 'filter');
 		}
 
+		// @TODO Benjamin: use plugin for this
 		$transitions = [
 			'publish' => [],
 			'unpublish' => [],
@@ -103,27 +104,27 @@ class HtmlView extends BaseHtmlView
 			'trash' => []
 		];
 
-		foreach ($this->transitions as $transition)
-		{
-			switch ($transition['stage_condition'])
-			{
-				case ContentComponent::CONDITION_PUBLISHED:
-					$transitions['publish'][$transition['workflow_id']][$transition['from_stage_id']][] = $transition;
-					break;
-
-				case ContentComponent::CONDITION_UNPUBLISHED:
-					$transitions['unpublish'][$transition['workflow_id']][$transition['from_stage_id']][] = $transition;
-					break;
-
-				case ContentComponent::CONDITION_ARCHIVED:
-					$transitions['archive'][$transition['workflow_id']][$transition['from_stage_id']][] = $transition;
-					break;
-
-				case ContentComponent::CONDITION_TRASHED:
-					$transitions['trash'][$transition['workflow_id']][$transition['from_stage_id']][] = $transition;
-					break;
-			}
-		}
+//		foreach ($this->transitions as $transition)
+//		{
+//			switch ($transition['stage_condition'])
+//			{
+//				case ContentComponent::CONDITION_PUBLISHED:
+//					$transitions['publish'][$transition['workflow_id']][$transition['from_stage_id']][] = $transition;
+//					break;
+//
+//				case ContentComponent::CONDITION_UNPUBLISHED:
+//					$transitions['unpublish'][$transition['workflow_id']][$transition['from_stage_id']][] = $transition;
+//					break;
+//
+//				case ContentComponent::CONDITION_ARCHIVED:
+//					$transitions['archive'][$transition['workflow_id']][$transition['from_stage_id']][] = $transition;
+//					break;
+//
+//				case ContentComponent::CONDITION_TRASHED:
+//					$transitions['trash'][$transition['workflow_id']][$transition['from_stage_id']][] = $transition;
+//					break;
+//			}
+//		}
 
 		$this->document->addScriptOptions('articles.transitions', $transitions);
 

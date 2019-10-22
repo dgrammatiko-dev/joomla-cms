@@ -152,8 +152,7 @@ class ArticleModel extends AdminModel
 		$workflow = new Workflow(['extension' => 'com_content']);
 
 		// Update content state value and workflow associations
-		return ContentHelper::updateContentState($pks, $stage->condition)
-				&& $workflow->updateAssociations($pks, $value);
+		return $workflow->updateAssociations($pks, $value);
 	}
 
 	/**
@@ -270,19 +269,8 @@ class ArticleModel extends AdminModel
 	 */
 	protected function canDelete($record)
 	{
-		if (!empty($record->id))
+		if (!empty($record->id) && $record->state == ContentComponent::CONDITION_TRASHED)
 		{
-			$stage = new StageTable($this->getDbo());
-
-			$workflow = new Workflow(['extension' => 'com_content']);
-
-			$assoc = $workflow->getAssociation($record->id);
-
-			if (!$stage->load($assoc->stage_id) || ($stage->condition != ContentComponent::CONDITION_TRASHED && !Factory::getApplication()->isClient('api')))
-			{
-				return false;
-			}
-
 			return Factory::getUser()->authorise('core.delete', 'com_content.article.' . (int) $record->id);
 		}
 
@@ -330,12 +318,12 @@ class ArticleModel extends AdminModel
 	protected function prepareTable($table)
 	{
 		// Set the publish date to now
-		if ($table->state == Workflow::CONDITION_PUBLISHED && (int) $table->publish_up == 0)
+		if ($table->state == ContentComponent::CONDITION_PUBLISHED && (int) $table->publish_up == 0)
 		{
 			$table->publish_up = Factory::getDate()->toSql();
 		}
 
-		if ($table->state == Workflow::CONDITION_PUBLISHED && intval($table->publish_down) == 0)
+		if ($table->state == ContentComponent::CONDITION_PUBLISHED && intval($table->publish_down) == 0)
 		{
 			$table->publish_down = $this->getDbo()->getNullDate();
 		}
@@ -399,7 +387,7 @@ class ArticleModel extends AdminModel
 			->where($db->quoteName('wt.to_stage_id') . ' != ' . $db->quoteName('wa.stage_id'))
 			->whereIn($db->quoteName('wa.item_id'), $pks)
 			->where($db->quoteName('wa.extension') . ' = ' . $db->quote('com_content'))
-			->where($db->quoteName('ws.condition') . ' = ' . (int) $value);
+			->where($db->quoteName('a.state') . ' = ' . (int) $value);
 
 		$transitions = $db->setQuery($query)->loadObjectList();
 
@@ -799,7 +787,7 @@ class ArticleModel extends AdminModel
 			$table['parent_id'] = 1;
 			$table['extension'] = 'com_content';
 			$table['language'] = $data['language'];
-			$table['published'] = 1;
+			$table['published'] = ContentComponent::CONDITION_PUBLISHED;
 
 			// Create new category and get catid back
 			$data['catid'] = CategoriesHelper::createCategory($table);
@@ -866,10 +854,11 @@ class ArticleModel extends AdminModel
 				return false;
 			}
 
+			// @TODO Benjamin: the initial condition should be set by the workflow
 			$stageId = (int) $workflow->stage_id;
 
 			// B/C state
-			$data['state'] = (int) $workflow->condition;
+			// $data['state'] = (int) $workflow->condition;
 		}
 
 		// Calculate new status depending on transition
@@ -883,27 +872,28 @@ class ArticleModel extends AdminModel
 				return false;
 			}
 
+			// @TODO Benjamin: some plugin trigger here
 			// Set the new state
-			$query = $db->getQuery(true);
-
-			$query->select($db->quoteName(['ws.id', 'ws.condition']))
-				->from($db->quoteName('#__workflow_stages', 'ws'))
-				->from($db->quoteName('#__workflow_transitions', 'wt'))
-				->where($db->quoteName('wt.to_stage_id') . ' = ' . $db->quoteName('ws.id'))
-				->where($db->quoteName('wt.id') . ' = ' . (int) $data['transition'])
-				->where($db->quoteName('ws.published') . ' = 1')
-				->where($db->quoteName('wt.published') . ' = 1');
-
-			$stage = $db->setQuery($query)->loadObject();
-
-			if (empty($stage->id))
-			{
-				$this->setError(Text::_('COM_CONTENT_WORKFLOW_TRANSITION_NOT_ALLOWED'));
-
-				return false;
-			}
-
-			$data['state'] = (int) $stage->condition;
+//			$query = $db->getQuery(true);
+//
+//			$query->select($db->quoteName(['ws.id', 'ws.condition']))
+//				->from($db->quoteName('#__workflow_stages', 'ws'))
+//				->from($db->quoteName('#__workflow_transitions', 'wt'))
+//				->where($db->quoteName('wt.to_stage_id') . ' = ' . $db->quoteName('ws.id'))
+//				->where($db->quoteName('wt.id') . ' = ' . (int) $data['transition'])
+//				->where($db->quoteName('ws.published') . ' = 1')
+//				->where($db->quoteName('wt.published') . ' = 1');
+//
+//			$stage = $db->setQuery($query)->loadObject();
+//
+//			if (empty($stage->id))
+//			{
+//				$this->setError(Text::_('COM_CONTENT_WORKFLOW_TRANSITION_NOT_ALLOWED'));
+//
+//				return false;
+//			}
+//
+//			$data['state'] = (int) $stage->condition;
 		}
 
 		// Automatic handling of alias for empty fields
@@ -1283,8 +1273,7 @@ class ArticleModel extends AdminModel
 			$query->select(
 				$db->quoteName(
 					[
-						'w.id',
-						'ws.condition'
+						'w.id'
 					]
 				)
 			)
@@ -1311,8 +1300,7 @@ class ArticleModel extends AdminModel
 		$query->select(
 			$db->quoteName(
 				[
-					'w.id',
-					'ws.condition'
+					'w.id'
 				]
 			)
 		)

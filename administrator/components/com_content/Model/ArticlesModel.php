@@ -65,7 +65,6 @@ class ArticlesModel extends ListModel
 				'level',
 				'tag',
 				'rating_count', 'rating',
-				'condition',
 				'stage',
 			);
 
@@ -116,9 +115,6 @@ class ArticlesModel extends ListModel
 
 		$published = $this->getUserStateFromRequest($this->context . '.filter.published', 'filter_published', '');
 		$this->setState('filter.published', $published);
-
-		$condition = $this->getUserStateFromRequest($this->context . '.filter.condition', 'filter_condition', '');
-		$this->setState('filter.condition', $condition);
 
 		$level = $this->getUserStateFromRequest($this->context . '.filter.level', 'filter_level');
 		$this->setState('filter.level', $level);
@@ -243,19 +239,18 @@ class ArticlesModel extends ListModel
 			->innerJoin(
 				$db->quoteName('#__workflow_associations', 'wa')
 				. ' ON ' . $db->quoteName('wa.item_id') . ' = ' . $db->quoteName('a.id')
-			);
+			)
+			->where($db->quoteName('wa.extension') . '=' . $db->quote('com_content'));
 
 		// Join over the workflow stages.
 		$query->select(
 			$db->quoteName(
 				[
 					'ws.title',
-					'ws.condition',
 					'ws.workflow_id'
 				],
 				[
 					'stage_title',
-					'stage_condition',
 					'workflow_id'
 				]
 			)
@@ -295,7 +290,6 @@ class ArticlesModel extends ListModel
 			'ua.name',
 			'ws.title',
 			'ws.workflow_id',
-			'ws.condition',
 			'wa.stage_id',
 			'parent.id',
 		);
@@ -357,18 +351,18 @@ class ArticlesModel extends ListModel
 			$query->where('wa.stage_id = ' . (int) $workflowStage);
 		}
 
-		$condition = (string) $this->getState('filter.condition');
+		$published = (string) $this->getState('filter.published');
 
-		if ($condition !== '*')
+		if ($published !== '*')
 		{
-			if (is_numeric($condition))
+			if (is_numeric($published))
 			{
-				$query->where($db->quoteName('ws.condition') . ' = ' . (int) $condition);
+				$query->where($db->quoteName('a.state') . ' = ' . (int) $published);
 			}
-			elseif (!is_numeric($workflowStage))
+			elseif (!is_numeric($published))
 			{
 				$query->whereIn(
-					$db->quoteName('ws.condition'),
+					$db->quoteName('a.state'),
 					[
 						ContentComponent::CONDITION_PUBLISHED,
 						ContentComponent::CONDITION_UNPUBLISHED
@@ -376,8 +370,6 @@ class ArticlesModel extends ListModel
 				);
 			}
 		}
-
-		$query->where($db->quoteName('wa.extension') . '=' . $db->quote('com_content'));
 
 		// Filter by categories and by level
 		$categoryId = $this->getState('filter.category_id', array());
@@ -557,7 +549,6 @@ class ArticlesModel extends ListModel
 						't.to_stage_id',
 						's.id',
 						's.title',
-						's.condition',
 						's.workflow_id'
 					),
 					array(
@@ -567,7 +558,6 @@ class ArticlesModel extends ListModel
 						'to_stage_id',
 						'stage_id',
 						'stage_title',
-						'stage_condition',
 						'workflow_id'
 					)
 				);
@@ -595,10 +585,11 @@ class ArticlesModel extends ListModel
 					}
 					else
 					{
+						// @TODO: Benjamin fix
 						// Update the transition text with final state value
-						$conditionName = $workflow->getConditionName($transition['stage_condition']);
+						//$conditionName = $workflow->getConditionName($transition['stage_condition']);
 
-						$transitions[$key]['text'] .= ' [' . Text::_($conditionName) . ']';
+						//$transitions[$key]['text'] .= ' [' . Text::_($conditionName) . ']';
 					}
 				}
 

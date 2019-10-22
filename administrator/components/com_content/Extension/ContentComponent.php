@@ -223,7 +223,7 @@ class ContentComponent extends MVCComponent implements
 	{
 		$config = (object) array(
 			'related_tbl'    => 'content',
-			'state_col'      => 'condition',
+			'state_col'      => 'state',
 			'group_col'      => 'catid',
 			'relation_type'  => 'category_or_group',
 			'uses_workflows' => true,

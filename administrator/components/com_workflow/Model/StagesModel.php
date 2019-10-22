@@ -37,7 +37,6 @@ class StagesModel extends ListModel
 				'id', 's.id',
 				'title', 's.title',
 				'ordering','s.ordering',
-				'condition','s.condition',
 				'published', 's.published'
 			);
 		}
@@ -134,7 +133,6 @@ class StagesModel extends ListModel
 				's.id',
 				's.title',
 				's.ordering',
-				's.condition',
 				's.default',
 				's.published',
 				's.description'

@@ -202,18 +202,27 @@ class Workflow
 			}
 		}
 
-		$component = $this->getComponent();
+		$app = Factory::getApplication();
 
-		if ($component instanceof WorkflowServiceInterface)
+		$result = $app->triggerEvent(
+			'onWorkflowBeforeTransition',
+			[
+				'pks' => $pks,
+				'extension' => $this->extension,
+				'user' => $app->getIdentity(),
+				'transition' => $transition,
+			]
+		);
+
+		if (in_array(false, $result, true))
 		{
-			$component->updateContentState($pks, $transition->condition);
+			return false;
 		}
 
 		$success = $this->updateAssociations($pks, $transition->to_stage_id);
 
 		if ($success)
 		{
-			$app = Factory::getApplication();
 			$app->triggerEvent(
 				'onWorkflowAfterTransition',
 				[

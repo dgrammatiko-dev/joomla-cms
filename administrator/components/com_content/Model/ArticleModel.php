@@ -325,7 +325,7 @@ class ArticleModel extends AdminModel
 
 		if ($table->state == ContentComponent::CONDITION_PUBLISHED && intval($table->publish_down) == 0)
 		{
-			$table->publish_down = $this->getDbo()->getNullDate();
+			$table->publish_down = null;
 		}
 
 		// Increment the content version number.

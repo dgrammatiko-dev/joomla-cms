@@ -97,6 +97,7 @@ CREATE TABLE IF NOT EXISTS `#__workflow_transitions` (
   `published` tinyint(1) NOT NULL DEFAULT 0,
   `title` varchar(255) NOT NULL,
   `description` text NOT NULL,
+  `options` text NOT NULL,
   `from_stage_id` int(10) NOT NULL,
   `to_stage_id` int(10) NOT NULL,
   `checked_out_time` datetime,
@@ -114,11 +115,11 @@ CREATE TABLE IF NOT EXISTS `#__workflow_transitions` (
 -- Dumping data for table `#__workflow_transitions`
 --
 
-INSERT INTO `#__workflow_transitions` (`id`, `asset_id`, `published`, `ordering`, `workflow_id`, `title`, `description`, `from_stage_id`, `to_stage_id`, `checked_out_time`, `checked_out`) VALUES
-(1, 0, 1, 1, 1, 'Unpublish', '', -1, 1, NULL, 0),
-(2, 0, 1, 2, 1, 'Publish', '', -1, 2, NULL, 0),
-(3, 0, 1, 3, 1, 'Trash', '', -1, 3, NULL, 0),
-(4, 0, 1, 4, 1, 'Archive', '', -1, 4, NULL, 0);
+INSERT INTO `#__workflow_transitions` (`id`, `asset_id`, `published`, `ordering`, `workflow_id`, `title`, `description`, `options`, `from_stage_id`, `to_stage_id`, `checked_out_time`, `checked_out`) VALUES
+(1, 0, 1, 1, 1, 'Unpublish', '', '{}', -1, 1, NULL, 0),
+(2, 0, 1, 2, 1, 'Publish', '', '{}', -1, 2, NULL, 0),
+(3, 0, 1, 3, 1, 'Trash', '', '{}', -1, 3, NULL, 0),
+(4, 0, 1, 4, 1, 'Archive', '', '{}', -1, 4, NULL, 0);
 
 --
 -- Creating extension entry

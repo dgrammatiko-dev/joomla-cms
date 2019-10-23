@@ -67,10 +67,18 @@ class HtmlView extends BaseHtmlView
 	/**
 	 * The ID of current workflow
 	 *
-	 * @var     integer
+	 * @var    Integer
 	 * @since  4.0.0
 	 */
 	protected $workflowID;
+
+	/**
+	 * Use core ui in different layouts
+	 *
+	 * @var   Integer
+	 * @since 4.0.0
+	 */
+	protected $useCoreUI = true;
 
 	/**
 	 * Display item view

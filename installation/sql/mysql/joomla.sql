@@ -2399,10 +2399,10 @@ CREATE TABLE IF NOT EXISTS `#__workflow_transitions` (
 --
 
 INSERT INTO `#__workflow_transitions` (`id`, `asset_id`, `published`, `ordering`, `workflow_id`, `title`, `description`, `options`, `from_stage_id`, `to_stage_id`, `checked_out_time`, `checked_out`) VALUES
-(1, 0, 1, 1, 1, 'Unpublish', '', '{}', -1, 1, NULL, 0),
-(2, 0, 1, 2, 1, 'Publish', '', '{}', -1, 2, NULL, 0),
-(3, 0, 1, 3, 1, 'Trash', '', '{}', -1, 3, NULL, 0),
-(4, 0, 1, 4, 1, 'Archive', '', '{}', -1, 4, NULL, 0);
+(1, 61, 1, 1, 1, 'Unpublish', '', '{}', -1, 1, NULL, 0),
+(2, 62, 1, 2, 1, 'Publish', '', '{}', -1, 2, NULL, 0),
+(3, 63, 1, 3, 1, 'Trash', '', '{}', -1, 3, NULL, 0),
+(4, 64, 1, 4, 1, 'Archive', '', '{}', -1, 4, NULL, 0);
 
 --
 -- Table structure for table `#__mail_templates`

@@ -135,6 +135,8 @@ class StagesModel extends ListModel
 				's.ordering',
 				's.default',
 				's.published',
+				's.checked_out',
+				's.checked_out_time',
 				's.description'
 			)
 		);
@@ -156,6 +158,10 @@ class StagesModel extends ListModel
 		{
 			$query->where($db->quoteName('s.condition') . ' = ' . (int) $db->escape($condition));
 		}
+
+		// Join over the users for the checked out user.
+		$query->select($db->quoteName('uc.name', 'editor'))
+			->join('LEFT', $db->quoteName('#__users', 'uc'), $db->quoteName('uc.id') . ' = ' . $db->quoteName('s.checked_out'));
 
 		$status = (string) $this->getState('filter.published');
 

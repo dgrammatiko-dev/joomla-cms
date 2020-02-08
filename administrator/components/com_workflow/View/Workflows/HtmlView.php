@@ -16,7 +16,6 @@ use Joomla\CMS\MVC\View\GenericDataException;
 use Joomla\CMS\MVC\View\HtmlView as BaseHtmlView;
 use Joomla\CMS\Toolbar\Toolbar;
 use Joomla\CMS\Toolbar\ToolbarHelper;
-use Joomla\Component\Workflow\Administrator\Helper\WorkflowHelper;
 
 /**
  * Workflows view class for the Workflow package.
@@ -106,9 +105,6 @@ class HtmlView extends BaseHtmlView
 
 		$this->extension = $this->state->get('filter.extension');
 
-		WorkflowHelper::addSubmenu($this->state->get('filter.extension'));
-		$this->sidebar       = \JHtmlSidebar::render();
-
 		$this->addToolbar();
 
 		return parent::display($tpl);
@@ -140,7 +136,7 @@ class HtmlView extends BaseHtmlView
 			$dropdown = $toolbar->dropdownButton('status-group')
 				->text('JTOOLBAR_CHANGE_STATUS')
 				->toggleSplit(false)
-				->icon('fa fa-ellipsis-h')
+				->icon('fas fa-ellipsis-h')
 				->buttonClass('btn btn-action')
 				->listCheck(true);
 
@@ -152,8 +148,7 @@ class HtmlView extends BaseHtmlView
 
 			if ($canDo->get('core.admin'))
 			{
-				// @Todo implement the checked_out/checkin feature
-				// $childBar->checkin('workflows.checkin');
+				$childBar->checkin('workflows.checkin')->listCheck(true);
 			}
 
 			if ($canDo->get('core.edit.state') && $this->state->get('filter.published') != -2)

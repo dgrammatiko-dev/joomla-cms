@@ -19,7 +19,6 @@ use Joomla\CMS\Router\Route;
 use Joomla\CMS\Toolbar\Toolbar;
 use Joomla\CMS\Toolbar\ToolbarHelper;
 use Joomla\CMS\Workflow\Workflow;
-use Joomla\Component\Workflow\Administrator\Helper\WorkflowHelper;
 
 /**
  * Stages view class for the Workflow package.
@@ -127,9 +126,23 @@ class HtmlView extends BaseHtmlView
 		$this->workflowID    = $this->workflow->id;
 		$this->extension     = $this->workflow->extension;
 
+<<<<<<< HEAD
 		WorkflowHelper::addSubmenu('stages');
 
 		$this->sidebar       = \JHtmlSidebar::render();
+=======
+		if (!empty($this->stages))
+		{
+			$extension = Factory::getApplication()->input->getCmd('extension');
+			$workflow  = new Workflow(['extension' => $extension]);
+
+			foreach ($this->stages as $i => $item)
+			{
+				$item->condition = $workflow->getConditionName((int) $item->condition);
+			}
+		}
+
+>>>>>>> 1d1d3dc52abc49066230c28a74ed6fb5db3c2707
 		$this->addToolbar();
 
 		return parent::display($tpl);
@@ -148,9 +161,7 @@ class HtmlView extends BaseHtmlView
 
 		$toolbar = Toolbar::getInstance('toolbar');
 
-		$workflow = !empty($this->state->get('active_workflow', '')) ? Text::_($this->state->get('active_workflow', '')) . ': ' : '';
-
-		ToolbarHelper::title(Text::sprintf('COM_WORKFLOW_STAGES_LIST', $this->escape($workflow)), 'address contact');
+		ToolbarHelper::title(Text::sprintf('COM_WORKFLOW_STAGES_LIST', Text::_($this->state->get('active_workflow', ''))), 'address contact');
 
 		$isCore = $this->workflow->core;
 		$arrow  = Factory::getLanguage()->isRtl() ? 'arrow-right' : 'arrow-left';
@@ -173,7 +184,7 @@ class HtmlView extends BaseHtmlView
 				$dropdown = $toolbar->dropdownButton('status-group')
 					->text('JTOOLBAR_CHANGE_STATUS')
 					->toggleSplit(false)
-					->icon('fa fa-ellipsis-h')
+					->icon('fas fa-ellipsis-h')
 					->buttonClass('btn btn-action')
 					->listCheck(true);
 
@@ -185,8 +196,7 @@ class HtmlView extends BaseHtmlView
 
 				if ($canDo->get('core.admin'))
 				{
-					// @ToDo Imlement the checked_out for workflows
-					// $childBar->checkin('stages.checkin', 'JTOOLBAR_CHECKIN', true);
+					$childBar->checkin('stages.checkin')->listCheck(true);
 				}
 
 				if ($this->state->get('filter.published') !== '-2')

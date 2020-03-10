@@ -85,22 +85,10 @@ class ArticleModel extends AdminModel
 			$db = $this->getDbo();
 			$query = $db->getQuery(true)
 				->insert($db->quoteName('#__content_frontpage'))
-				->values(
-					$newId . ', 0, '
-					. (empty($table->featured_up) ? 'NULL' : $db->quote($table->featured_up))
-					. ', '
-					. (empty($table->featured_down) ? 'NULL' : $db->quote($table->featured_down))
-				);
+				->values($newId . ', 0');
 			$db->setQuery($query);
 			$db->execute();
 		}
-
-		// Copy workflow association
-		$workflow = new Workflow(['extension' => 'com_content']);
-
-		$assoc = $workflow->getAssociation((int) $oldId);
-
-		$workflow->createAssociation((int) $newId, (int) $assoc->stage_id);
 
 		// Register FieldsHelper
 		\JLoader::register('FieldsHelper', JPATH_ADMINISTRATOR . '/components/com_fields/helpers/fields.php');
@@ -135,7 +123,7 @@ class ArticleModel extends AdminModel
 	 *
 	 * @since   4.0.0
 	 */
-	protected function batchWorkflowStage(int $value, array $pks, array $contexts)
+	protected function batchWorkflowStage($value, $pks, $contexts)
 	{
 		$user = Factory::getUser();
 
@@ -161,15 +149,10 @@ class ArticleModel extends AdminModel
 			return false;
 		}
 
-		$workflow = new Workflow(['extension' => 'com_content']);
+		$workflow = new Workflow('com_content');
 
 		// Update content state value and workflow associations
-<<<<<<< HEAD
 		return $workflow->updateAssociations($pks, $value);
-=======
-		return ContentHelper::updateContentState($pks, (int) $stage->condition)
-				&& $workflow->updateAssociations($pks, $value);
->>>>>>> 1d1d3dc52abc49066230c28a74ed6fb5db3c2707
 	}
 
 	/**
@@ -288,20 +271,6 @@ class ArticleModel extends AdminModel
 	{
 		if (!empty($record->id) && $record->state == ContentComponent::CONDITION_TRASHED)
 		{
-<<<<<<< HEAD
-=======
-			$stage = new StageTable($this->getDbo());
-
-			$workflow = new Workflow(['extension' => 'com_content']);
-
-			$assoc = $workflow->getAssociation((int) $record->id);
-
-			if (!$stage->load($assoc->stage_id) || ($stage->condition != ContentComponent::CONDITION_TRASHED && !Factory::getApplication()->isClient('api')))
-			{
-				return false;
-			}
-
->>>>>>> 1d1d3dc52abc49066230c28a74ed6fb5db3c2707
 			return Factory::getUser()->authorise('core.delete', 'com_content.article.' . (int) $record->id);
 		}
 
@@ -430,7 +399,7 @@ class ArticleModel extends AdminModel
 			{
 				if (!isset($itrans[$transition->item_id]) || $itrans[$transition->item_id] == $transition->id)
 				{
-					$items[$transition->item_id] = (int) $transition->id;
+					$items[$transition->item_id] = $transition->id;
 				}
 			}
 		}
@@ -593,7 +562,7 @@ class ArticleModel extends AdminModel
 
 			if ($table->load(array('id' => $id)))
 			{
-				$workflow = new Workflow(['extension' => 'com_content']);
+				$workflow = new Workflow('com_content');
 
 				// Transition field
 				$assoc = $workflow->getAssociation($table->id);
@@ -962,7 +931,7 @@ class ArticleModel extends AdminModel
 			}
 		}
 
-		$workflow = new Workflow(['extension' => 'com_content']);
+		$workflow = new Workflow('com_content');
 
 		if (parent::save($data))
 		{
@@ -979,7 +948,7 @@ class ArticleModel extends AdminModel
 			// Let's check if we have workflow association (perhaps something went wrong before)
 			if (empty($stageId))
 			{
-				$assoc = $workflow->getAssociation((int) $this->getState($this->getName() . '.id'));
+				$assoc = $workflow->getAssociation($this->getState($this->getName() . '.id'));
 
 				// If not, reset the state and let's create the associations
 				if (empty($assoc->item_id))
@@ -988,7 +957,7 @@ class ArticleModel extends AdminModel
 
 					$table->load((int) $this->getState($this->getName() . '.id'));
 
-					$workflow = $this->getWorkflowByCategory((int) $table->catid);
+					$workflow = $this->getWorkflowByCategory($table->catid);
 
 					if (empty($workflow->id))
 					{
@@ -1009,7 +978,7 @@ class ArticleModel extends AdminModel
 			// If we have a new state, create the workflow association
 			if (!empty($stageId))
 			{
-				$workflow->createAssociation((int) $this->getState($this->getName() . '.id'), (int) $stageId);
+				$workflow->createAssociation($this->getState($this->getName() . '.id'), (int) $stageId);
 			}
 
 			// Run the transition and update the workflow association
@@ -1169,7 +1138,7 @@ class ArticleModel extends AdminModel
 		// Association content items
 		if (Associations::isEnabled())
 		{
-			$languages = LanguageHelper::getContentLanguages(false, false, null, 'ordering', 'asc');
+			$languages = LanguageHelper::getContentLanguages(false, true, null, 'ordering', 'asc');
 
 			if (count($languages) > 1)
 			{
@@ -1269,7 +1238,7 @@ class ArticleModel extends AdminModel
 			$db->setQuery($query);
 			$db->execute();
 
-			$workflow = new Workflow(['extension' => 'com_content']);
+			$workflow = new Workflow('com_content');
 
 			$workflow->deleteAssociation($pks);
 		}
@@ -1280,11 +1249,11 @@ class ArticleModel extends AdminModel
 	/**
 	 * Load the assigned workflow information by a given category ID
 	 *
-	 * @param   integer  $catId  The given category
+	 * @param   int  $catId  The give category
 	 *
 	 * @return  integer|boolean  If found, the workflow ID, otherwise false
 	 */
-	protected function getWorkflowByCategory(int $catId)
+	protected function getWorkflowByCategory($catId)
 	{
 		$db = $this->getDbo();
 
@@ -1381,18 +1350,31 @@ class ArticleModel extends AdminModel
 	/**
 	 * Runs transition for item.
 	 *
-	 * @param   integer  $pk             Id of article
-	 * @param   integer  $transition_id  Id of transition
+	 * @param   integer  $pk            Id of article
+	 * @param   integer  $transitionId  Id of transition
 	 *
 	 * @return  boolean
 	 *
 	 * @since   4.0.0
 	 */
-	public function runTransition(int $pk, int $transition_id): bool
+	public function runTransition($pk, $transitionId)
 	{
-		$workflow = new Workflow(['extension' => 'com_content']);
+		$workflow = new Workflow('com_content');
 
-		$runTransaction = $workflow->executeTransition([$pk], $transition_id);
+		// Include the plugins for the change of state event.
+		// TODO: Is this the right place to import workflow plugins - potentially better in the executeTransition method
+		PluginHelper::importPlugin('workflow');
+		PluginHelper::importPlugin($this->events_map['change_state']);
+
+		// B/C state change trigger for UCM
+		$context = $this->option . '.' . $this->name;
+
+		$publishingOptions = [
+			'context' => $context,
+			'changeStateEvent' => $this->event_change_state,
+		];
+
+		$runTransaction = $workflow->executeTransition($pk, $transitionId, ['publishing' => $publishingOptions]);
 
 		if (!$runTransaction)
 		{
@@ -1400,15 +1382,6 @@ class ArticleModel extends AdminModel
 
 			return false;
 		}
-
-		// B/C state change trigger for UCM
-		$context = $this->option . '.' . $this->name;
-
-		// Include the plugins for the change of stage event.
-		PluginHelper::importPlugin($this->events_map['change_state']);
-
-		// Trigger the change stage event.
-		Factory::getApplication()->triggerEvent($this->event_change_state, [$context, [$pk], $workflow->getConditionForTransition($transition_id)]);
 
 		return true;
 	}

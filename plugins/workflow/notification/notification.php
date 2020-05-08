@@ -54,16 +54,7 @@ class PlgWorkflowNotification extends CMSPlugin
 	 * @since  3.9.0
 	 */
 	protected $db;
-	
-	/**
-	 * The name of the supported name to check against
-	 *
-	 * @var   string
-	 * @since __DEPLOY_VERSION__
-	 */
-	
-	protected $supportFunctionality = 'core.notification';
-	
+
 	/**
 	 * The form event.
 	 *
@@ -83,7 +74,7 @@ class PlgWorkflowNotification extends CMSPlugin
 		{
 			return;
 		}
-		
+
 		return $this->enhanceTransitionForm($form, $data);
 	}
 
@@ -144,10 +135,10 @@ class PlgWorkflowNotification extends CMSPlugin
 		{
 			return true;
 		}
-		
+
 		// Get UserIds of Receivers
 		$userIds = $this->getUsersFromGroup($data);
-		
+
 		// Email to author 
 		if (!empty($data->options['email_author']))
 		{
@@ -171,7 +162,7 @@ class PlgWorkflowNotification extends CMSPlugin
 		// Prepare Language for messages
 		$default_language = ComponentHelper::getParams('com_languages')->get('administrator');
 		$debug = $this->app->get('debug_lang');
-		
+
 		// Get the Model via $context
 		$parts = explode('.', $context);
 
@@ -183,10 +174,10 @@ class PlgWorkflowNotification extends CMSPlugin
 
 		$model_message = $this->app->bootComponent('com_messages')
 					->getMVCFactory()->createModel('Message', 'Administrator');
-		
+
 		// The active user
 		$user = $this->app->getIdentity();
-			
+	
 		foreach ($pks as $pk)
 		{
 			// Get the item whose state has been changed
@@ -224,7 +215,7 @@ class PlgWorkflowNotification extends CMSPlugin
 
 		return true;
 	}
-	
+
 	/*
 	 * Get Users of  a group
 	 *

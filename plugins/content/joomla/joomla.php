@@ -600,6 +600,21 @@ class PlgContentJoomla extends CMSPlugin
 	 */
 	public function onContentChangeState($context, $pks, $value)
 	{
+		$pks = ArrayHelper::toInteger($pks);
+
+		if ($context === 'com_workflow.stage' && $value == -2)
+		{
+			foreach ($pks as $pk)
+			{
+				if (!$this->_canDeleteStage($pk))
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+
 		$db = $this->db;
 		$query = $db->getQuery(true)
 			->select($db->quoteName('core_content_id'))

@@ -175,6 +175,11 @@ class PlgWorkflowNotification extends CMSPlugin
 		$model_message = $this->app->bootComponent('com_messages')
 					->getMVCFactory()->createModel('Message', 'Administrator');
 
+		$model_stage = $this->app->bootComponent('com_workflow')
+					->getMVCFactory()->createModel('Stage', 'Administrator');
+		
+		$toStage = $model_stage->getItem($data->to_stage_id)->title;
+
 		// The active user
 		$user = $this->app->getIdentity();
 	
@@ -191,7 +196,7 @@ class PlgWorkflowNotification extends CMSPlugin
 				// Load language for messaging
 				$lang = Language::getInstance($user->getParam('admin_language', $default_language), $debug);
 				$lang->load('plg_workflow_notification');
-				$messageText = sprintf($lang->_('PLG_WORKFLOW_NOTIFICATION_ON_TRANSITION_MSG'), $item->title, $user->name, $data->to_stage_id);
+				$messageText = sprintf($lang->_('PLG_WORKFLOW_NOTIFICATION_ON_TRANSITION_MSG'), $item->title, $user->name, $lang->_($toStage));
 
 				if (!empty($data->options['text'] && $user_id !== $author->id))
 				{
@@ -217,11 +222,13 @@ class PlgWorkflowNotification extends CMSPlugin
 	}
 
 	/*
-	 * Get Users of  a group
+	 * Get user_ids of receivers	
+	 * 
+	 * @param   object  $data    Object containing data about the transition
 	 *
-	 * @return  array  User_ids 
+	 * @return   array  $userIds  The receivers
 	 *
-	 * @since   4.0.0
+	 * @since   __DEPLOY_VERSION__
 	 */
 	private function getUsersFromGroup($data): Array
 	{

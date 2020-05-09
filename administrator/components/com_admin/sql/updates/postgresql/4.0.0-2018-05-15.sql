@@ -125,7 +125,7 @@ INSERT INTO "#__extensions" ("package_id", "name", "type", "element", "folder", 
 (0, 'com_workflow', 'component', 'com_workflow', '', 1, 1, 0, 0, '', '{}', 0, '1970-01-01 00:00:00', 0, 0),
 (0, 'plg_workflow_publishing', 'plugin', 'publishing', 'workflow', 0, 1, 1, 0, '', '{}', 0, NULL, 0, 0),
 (0, 'plg_workflow_featuring', 'plugin', 'featuring', 'workflow', 0, 1, 1, 0, '', '{}', 0, NULL, 0, 0),
-(0, 'plg_workflow_notification', 'plugin', 'featuring', 'workflow', 0, 1, 1, 0, '', '{}', 0, NULL, 0, 0);
+(0, 'plg_workflow_notification', 'plugin', 'notification', 'workflow', 0, 1, 1, 0, '', '{}', 0, NULL, 0, 0);
 --
 -- Creating Associations for existing content
 --

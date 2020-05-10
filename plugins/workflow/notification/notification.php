@@ -139,9 +139,9 @@ class PlgWorkflowNotification extends CMSPlugin
 
 		// Get the Model of the Item via $context
 		$parts = explode('.', $context);
-		
+
 		$component = $this->app->bootComponent($parts[0]);
-		
+
 		$modelName = $component->getModelName($context);
 
 		$model = $component->getMVCFactory()->createModel($modelName, $this->app->getName(),  ['ignore_request' => true]);
@@ -163,21 +163,21 @@ class PlgWorkflowNotification extends CMSPlugin
 		// Get the model for private messages
 		$model_message = $this->app->bootComponent('com_messages')
 					->getMVCFactory()->createModel('Message', 'Administrator');
-		
+
 		// Get the title of the stage
 		$model_stage = $this->app->bootComponent('com_workflow')
 					->getMVCFactory()->createModel('Stage', 'Administrator');
-		
+
 		$toStage = $model_stage->getItem($data->to_stage_id)->title;
 
 		// The active user
 		$user = $this->app->getIdentity();
-	
+
 		foreach ($pks as $pk)
 		{
 			// Get the item whose state has been changed
 			$item = $model->getItem($pk);
-			
+
 			// Send Email to receivers
 			foreach ($userIds as $user_id)
 			{

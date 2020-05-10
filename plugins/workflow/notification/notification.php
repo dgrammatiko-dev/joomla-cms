@@ -90,18 +90,6 @@ class PlgWorkflowNotification extends CMSPlugin
 	 */
 	protected function enhanceTransitionForm(Form $form, $data)
 	{
-		$model = $this->app->bootComponent('com_workflow')
-			->getMVCFactory()->createModel('Workflow', 'Administrator', ['ignore_request' => true]);
-
-		$workflow_id = !empty($data->workflow_id) ? (int) $data->workflow_id : (int) $form->getValue('workflow_id');
-
-		if (empty($workflow_id))
-		{
-			$workflow_id = $this->app->input->getInt('workflow_id');
-		}
-
-		$workflow = $model->getItem($workflow_id);
-
 		Form::addFormPath(__DIR__ . '/forms');
 
 		$form->loadFile('workflow_notification');
@@ -122,8 +110,8 @@ class PlgWorkflowNotification extends CMSPlugin
 	 */
 	public function onWorkflowAfterTransition($context, $pks, $data)
 	{
-		// Send mail active
-		if (isset($data->options['send_mail']) && !$data->options['send_mail'])
+		// Check if send-mail is active
+		if (empty($data->options['send_mail']) || !$data->options['send_mail'])
 		{
 			return true;
 		}
@@ -139,20 +127,6 @@ class PlgWorkflowNotification extends CMSPlugin
 		// Get UserIds of Receivers
 		$userIds = $this->getUsersFromGroup($data);
 
-		// Email to author 
-		if (!empty($data->options['email_author']))
-		{
-			$author = $this->app->getIdentity($item->created_by);
-
-			if(!empty($author) && !$author->block)
-			{
-				if (!in_array($author->id, $userIds))
-				{
-					$userIds[] = $author->id;
-				}
-			}
-		}
-
 		// If there are no receivers, stop here
 		if (empty($userIds))
 		{
@@ -163,18 +137,34 @@ class PlgWorkflowNotification extends CMSPlugin
 		$default_language = ComponentHelper::getParams('com_languages')->get('administrator');
 		$debug = $this->app->get('debug_lang');
 
-		// Get the Model via $context
+		// Get the Model of the Item via $context
 		$parts = explode('.', $context);
+		
+		$component = $this->app->bootComponent($parts[0]);
+		
+		$modelName = $component->getModelName($context);
 
-		$component = $parts[0];
-		$modelName = $parts[1];
+		$model = $component->getMVCFactory()->createModel($modelName, $this->app->getName(),  ['ignore_request' => true]);
 
-		$model = $this->app->bootComponent($component)
-				->getMVCFactory()->createModel($modelName, 'Administrator', ['ignore_request' => true]);
+		// Add author of the item to the receivers arry if the param email-author is set
+		if (!empty($data->options['email_author']) && !empty($item->created_by))
+		{
+			$author = $this->app->getIdentity($item->created_by);
 
+			if (!empty($author) && !$author->block)
+			{
+				if (!in_array($author->id, $userIds))
+				{
+					$userIds[] = $author->id;
+				}
+			}
+		}
+
+		// Get the model for private messages
 		$model_message = $this->app->bootComponent('com_messages')
 					->getMVCFactory()->createModel('Message', 'Administrator');
-
+		
+		// Get the title of the stage
 		$model_stage = $this->app->bootComponent('com_workflow')
 					->getMVCFactory()->createModel('Stage', 'Administrator');
 		
@@ -233,9 +223,9 @@ class PlgWorkflowNotification extends CMSPlugin
 	private function getUsersFromGroup($data): Array
 	{
 		// Single userIds
-		$users = isset($data->options['receivers']) ? $data->options['receivers'] : []; 
+		$users = !empty($data->options['receivers']) ? $data->options['receivers'] : []; 
 
-		$groups = isset($data->options['groups']) ? $data->options['groups'] : []; 
+		$groups = !empty($data->options['groups']) ? $data->options['groups'] : []; 
 
 		$users2 = [];
 

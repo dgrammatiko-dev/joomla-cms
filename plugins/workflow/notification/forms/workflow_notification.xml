@@ -20,6 +20,7 @@
 				description="PLG_WORKFLOW_NOTIFICATION_ADDTEXT_DESC"
 				rows="3"
 				filter="safehtml"
+				showon="notification_send_mail:1"
 			/>
 			<field
 				name="notification_groups"
@@ -29,6 +30,7 @@
 				multiple="true"
 				layout="joomla.form.field.list-fancy-select"
 				default="0"
+				showon="notification_send_mail:1"
 			/>
 			<field
 				name="notification_receivers"
@@ -40,6 +42,7 @@
 				value_field="name"
 				multiple="true"
 				layout="joomla.form.field.list-fancy-select"
+				showon="notification_send_mail:1"
 			/>
 			<field
 				name="notification_email-author"
@@ -48,6 +51,7 @@
 				layout="joomla.form.field.radio.switcher"
 				default="0"
 				filter="boolean"
+				showon="notification_send_mail:1"
 				>
 				<option value="0">JNO</option>
 				<option value="1">JYES</option>
@@ -59,7 +63,7 @@
 				description="PLG_WORKFLOW_NOTIFICATION_ADDTEXT_AUTHOR_DESC"
 				rows="3"
 				filter="safehtml"
-				showon="email-author:1"
+				showon="notification_send_mail:1[AND]notification_email-author:1"
 			/>
 		</fieldset>
 	</fields>

@@ -15,13 +15,9 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\Form\Form;
 use Joomla\CMS\Language\Language;
 use Joomla\CMS\Language\Text;
-use Joomla\CMS\Object\CMSObject;
 use Joomla\CMS\Plugin\CMSPlugin;
-use Joomla\CMS\Table\TableInterface;
 use Joomla\CMS\User\User;
 use Joomla\CMS\Workflow\Workflow;
-use Joomla\Component\Content\Administrator\Table\ArticleTable;
-use Joomla\Database\ParameterType;
 use Joomla\Utilities\ArrayHelper;
 
 /**
@@ -110,8 +106,23 @@ class PlgWorkflowNotification extends CMSPlugin
 	 */
 	public function onWorkflowAfterTransition($context, $pks, $data)
 	{
+		$parts = explode('.', $context);
+
+		// Check the extension 
+		if (count($parts) < 2)
+		{
+			return false;
+		}
+
+		$component = $this->app->bootComponent($parts[0]);
+
+		if (!$component->isWorkflowActive($context))
+		{
+			return false;
+		}
+
 		// Check if send-mail is active
-		if (empty($data->options['notification_send_mail']) || !$data->options['notification_send_mail'])
+		if (empty($data->options['notification_send_mail']))
 		{
 			return true;
 		}
@@ -127,26 +138,19 @@ class PlgWorkflowNotification extends CMSPlugin
 		// Get UserIds of Receivers
 		$userIds = $this->getUsersFromGroup($data);
 
-		// If there are no receivers, stop here
-		if (empty($userIds))
-		{
-			return true;
-		}
+		// The active user
+		$user = $this->app->getIdentity();
 
 		// Prepare Language for messages
 		$default_language = ComponentHelper::getParams('com_languages')->get('administrator');
 		$debug = $this->app->get('debug_lang');
 
-		// Get the Model of the Item via $context
-		$parts = explode('.', $context);
-
-		$component = $this->app->bootComponent($parts[0]);
-
 		$modelName = $component->getModelName($context);
-
 		$model = $component->getMVCFactory()->createModel($modelName, $this->app->getName(),  ['ignore_request' => true]);
 
-		// Add author of the item to the receivers arry if the param email-author is set
+		$authorId = 0; 
+
+		// Add author of the item to the receivers array if the param email-author is set
 		if (!empty($data->options['notification_email_author']) && !empty($item->created_by))
 		{
 			$author = $this->app->getIdentity($item->created_by);
@@ -156,8 +160,23 @@ class PlgWorkflowNotification extends CMSPlugin
 				if (!in_array($author->id, $userIds))
 				{
 					$userIds[] = $author->id;
+					$authorId = $author->id;
 				}
 			}
+		}
+
+		// Don't send the notification to the active user
+		$key = array_search($user->id, $userIds);
+
+		if ($key)
+		{
+			unset($userIds[$key]);
+		}
+
+		// If there are no receivers, stop here
+		if (empty($userIds))
+		{
+			return true;
 		}
 
 		// Get the model for private messages
@@ -169,9 +188,6 @@ class PlgWorkflowNotification extends CMSPlugin
 					->getMVCFactory()->createModel('Stage', 'Administrator');
 
 		$toStage = $model_stage->getItem($data->to_stage_id)->title;
-
-		// The active user
-		$user = $this->app->getIdentity();
 
 		foreach ($pks as $pk)
 		{
@@ -188,14 +204,14 @@ class PlgWorkflowNotification extends CMSPlugin
 				$lang->load('plg_workflow_notification');
 				$messageText = sprintf($lang->_('PLG_WORKFLOW_NOTIFICATION_ON_TRANSITION_MSG'), $item->title, $user->name, $lang->_($toStage));
 
-				if (!empty($data->options['notification_text'] && $user_id !== $author->id))
+				if (!empty($data->options['notification_text'] && $user_id !== $authorId))
 				{
-					$messageText .= ' ' . htmlspecialchars($lang->_($data->options['notification_text']));
+					$messageText .= '<br>' . htmlspecialchars($lang->_($data->options['notification_text']));
 				}
 
-				if (!empty($data->options['notification_author_text'] && $user_id === $author->id))
+				if (!empty($data->options['notification_author_text'] && $user_id === $authorId))
 				{
-					$messageText .= ' ' . htmlspecialchars($lang->_($data->options['notification_text_author']));
+					$messageText .= '<br>' . htmlspecialchars($lang->_($data->options['notification_text_author']));
 				}
 
 				$message = array(
@@ -222,10 +238,21 @@ class PlgWorkflowNotification extends CMSPlugin
 	 */
 	private function getUsersFromGroup($data): Array
 	{
-		// Single userIds
-		$users = !empty($data->options['notification_receivers']) ? $data->options['notification_receivers'] : []; 
+		$users = [];
 
-		$groups = !empty($data->options['notification_groups']) ? $data->options['notification_groups'] : []; 
+		// Single userIds
+		if (!empty($data->options['notification_receivers']))
+		{
+			$users = ArrayHelper::toInteger($data->options['notification_receivers']);
+		} 
+
+		// Usergroups
+		$groups = [];
+
+		if (!empty($data->options['notification_groups']))
+		{
+			$groups = ArrayHelper::toInteger($data->options['notification_groups']);
+		}
 
 		$users2 = [];
 
@@ -245,7 +272,7 @@ class PlgWorkflowNotification extends CMSPlugin
 		}
 
 		// Merge userIds from individual entries and userIDs from groups
-		$userIds= array_unique(array_merge($users, $users2));
+		$userIds = array_unique(array_merge($users, $users2));
 
 		return $userIds;
 	}

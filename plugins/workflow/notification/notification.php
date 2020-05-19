@@ -111,7 +111,7 @@ class PlgWorkflowNotification extends CMSPlugin
 	public function onWorkflowAfterTransition($context, $pks, $data)
 	{
 		// Check if send-mail is active
-		if (empty($data->options['send_mail']) || !$data->options['send_mail'])
+		if (empty($data->options['notification_send_mail']) || !$data->options['notification_send_mail'])
 		{
 			return true;
 		}
@@ -147,7 +147,7 @@ class PlgWorkflowNotification extends CMSPlugin
 		$model = $component->getMVCFactory()->createModel($modelName, $this->app->getName(),  ['ignore_request' => true]);
 
 		// Add author of the item to the receivers arry if the param email-author is set
-		if (!empty($data->options['email_author']) && !empty($item->created_by))
+		if (!empty($data->options['notification_email_author']) && !empty($item->created_by))
 		{
 			$author = $this->app->getIdentity($item->created_by);
 
@@ -188,14 +188,14 @@ class PlgWorkflowNotification extends CMSPlugin
 				$lang->load('plg_workflow_notification');
 				$messageText = sprintf($lang->_('PLG_WORKFLOW_NOTIFICATION_ON_TRANSITION_MSG'), $item->title, $user->name, $lang->_($toStage));
 
-				if (!empty($data->options['text'] && $user_id !== $author->id))
+				if (!empty($data->options['notification_text'] && $user_id !== $author->id))
 				{
-					$messageText .= ' ' . htmlspecialchars($lang->_($data->options['text']));
+					$messageText .= ' ' . htmlspecialchars($lang->_($data->options['notification_text']));
 				}
 
-				if (!empty($data->options['author_text'] && $user_id === $author->id))
+				if (!empty($data->options['notification_author_text'] && $user_id === $author->id))
 				{
-					$messageText .= ' ' . htmlspecialchars($lang->_($data->options['text_author']));
+					$messageText .= ' ' . htmlspecialchars($lang->_($data->options['notification_text_author']));
 				}
 
 				$message = array(
@@ -223,9 +223,9 @@ class PlgWorkflowNotification extends CMSPlugin
 	private function getUsersFromGroup($data): Array
 	{
 		// Single userIds
-		$users = !empty($data->options['receivers']) ? $data->options['receivers'] : []; 
+		$users = !empty($data->options['notification_receivers']) ? $data->options['notification_receivers'] : []; 
 
-		$groups = !empty($data->options['groups']) ? $data->options['groups'] : []; 
+		$groups = !empty($data->options['notification_groups']) ? $data->options['notification_groups'] : []; 
 
 		$users2 = [];
 

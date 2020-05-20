@@ -41,6 +41,14 @@ class PlgWorkflowNotification extends CMSPlugin
 	 * @since __DEPLOY_VERSION__
 	 */
 	protected $app;
+
+	/**
+	 * Database object.
+	 *
+	 * @var    JDatabaseDriver
+	 * @since  3.9.0
+	 */
+	protected $db;
 	
 	/**
 	 * The form event.
@@ -164,6 +172,12 @@ class PlgWorkflowNotification extends CMSPlugin
 			unset($userIds[$key]);
 		}
 
+		// Remove users with locked input box from the list of receivers
+		if (!empty($userIds))
+		{
+			$userIds = $this->removeLocked($userIds);
+		}
+
 		// If there are no receivers, stop here
 		if (empty($userIds))
 		{
@@ -182,10 +196,9 @@ class PlgWorkflowNotification extends CMSPlugin
 
 		foreach ($pks as $pk)
 		{
-			
 			// Get the title of the item which has changed
 			$title ='';
-			
+
 			if (method_exists($model, 'getItem'))
 			{
 				$title = $model->getItem($pk)->title;
@@ -263,6 +276,8 @@ class PlgWorkflowNotification extends CMSPlugin
 			$model->setState('list.select', 'id');
 			$model->setState('filter.groups', $groups);
 			$model->setState('filter.state', 0);
+			$model->setState('filter.active', 1);
+			$model->setState('filter.sendEmail', 1);
 
 			// Ids from usergroups 
 			$groupUsers = $model->getItems();	
@@ -273,5 +288,35 @@ class PlgWorkflowNotification extends CMSPlugin
 		$userIds = array_unique(array_merge($users, $users2));
 
 		return $userIds;
+	}
+
+	/*
+	 * Remove receivers who have locked their message inputbox	
+	 * 
+	 * @param   array  $uerIds  The userIds which must be checked
+	 *
+	 * @return   array  users with active message input box
+	 *
+	 * @since   __DEPLOY_VERSION__
+	 */
+	private function removeLocked($userIds): Array
+	{
+		// Check for locked inboxes would be better to have _cdf settings in the user_object or a filter in users model
+		$locked = [];
+		if (!empty($userIds))
+		{
+			$db = $this->db;
+
+			$query = $db->getQuery(true);
+			$query->select($db->quoteName('user_id'))
+					->from($db->quoteName('#__messages_cfg'))
+					->whereIn($db->quoteName('user_id'), $userIds)
+					->where($db->quoteName('cfg_name') . '=' . $db->quote('locked'))
+					->where($db->quoteName('cfg_value') . '=1'); 
+
+			$locked = $db->setQuery($query)->loadColumn();
+		}
+
+		return array_diff($userIds, $locked);
 	}
 }

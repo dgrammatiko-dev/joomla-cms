@@ -9,7 +9,6 @@
 
 defined('_JEXEC') or die;
 
-use Joomla\CMS\Application\CMSApplicationInterface;
 use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Form\Form;
@@ -42,15 +41,7 @@ class PlgWorkflowNotification extends CMSPlugin
 	 * @since __DEPLOY_VERSION__
 	 */
 	protected $app;
-
-	/**
-	 * Database object.
-	 *
-	 * @var    JDatabaseDriver
-	 * @since  3.9.0
-	 */
-	protected $db;
-
+	
 	/**
 	 * The form event.
 	 *

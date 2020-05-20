@@ -153,13 +153,13 @@ class PlgWorkflowNotification extends CMSPlugin
 		// Add author of the item to the receivers array if the param email-author is set
 		if (!empty($data->options['notification_email_author']) && !empty($item->created_by))
 		{
-			$author = $this->app->getIdentity($item->created_by);
+			$author = User::getInstance($item->created_by);
 
 			if (!empty($author) && !$author->block)
 			{
 				if (!in_array($author->id, $userIds))
 				{
-					$userIds[] = $author->id;
+					$userIds[] = (int) $author->id;
 					$authorId = $author->id;
 				}
 			}
@@ -191,8 +191,14 @@ class PlgWorkflowNotification extends CMSPlugin
 
 		foreach ($pks as $pk)
 		{
-			// Get the item whose state has been changed
-			$item = $model->getItem($pk);
+			
+			// Get the title of the item which has changed
+			$title ='';
+			
+			if (method_exists($model, 'getItem'))
+			{
+				$title = $model->getItem($pk)->title;
+			}
 
 			// Send Email to receivers
 			foreach ($userIds as $user_id)
@@ -202,7 +208,7 @@ class PlgWorkflowNotification extends CMSPlugin
 				// Load language for messaging
 				$lang = Language::getInstance($user->getParam('admin_language', $default_language), $debug);
 				$lang->load('plg_workflow_notification');
-				$messageText = sprintf($lang->_('PLG_WORKFLOW_NOTIFICATION_ON_TRANSITION_MSG'), $item->title, $user->name, $lang->_($toStage));
+				$messageText = sprintf($lang->_('PLG_WORKFLOW_NOTIFICATION_ON_TRANSITION_MSG'), $title, $user->name, $lang->_($toStage));
 
 				if (!empty($data->options['notification_text'] && $user_id !== $authorId))
 				{

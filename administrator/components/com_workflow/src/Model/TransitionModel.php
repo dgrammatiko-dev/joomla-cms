@@ -56,11 +56,7 @@ class TransitionModel extends AdminModel
 	 */
 	protected function canDelete($record)
 	{
-		$table = $this->getTable('Workflow', 'Administrator');
-
-		$table->load($record->workflow_id);
-
-		if (empty($record->id) || $record->published != -2 || $table->core)
+		if (empty($record->id) || $record->published != -2)
 		{
 			return false;
 		}
@@ -91,15 +87,6 @@ class TransitionModel extends AdminModel
 		{
 			$workflowID          = $app->getUserStateFromRequest($context . '.filter.workflow_id', 'workflow_id', 0, 'int');
 			$record->workflow_id = $workflowID;
-		}
-
-		$table = $this->getTable('Workflow', 'Administrator');
-
-		$table->load($record->workflow_id);
-
-		if ($table->core)
-		{
-			return false;
 		}
 
 		// Check for existing workflow.
@@ -216,6 +203,10 @@ class TransitionModel extends AdminModel
 	 */
 	public function getForm($data = array(), $loadData = true)
 	{
+		$app = Factory::getApplication();
+
+		$context = $this->option . '.' . $this->name;
+
 		// Get the form.
 		$form = $this->loadForm(
 			'com_workflow.transition',
@@ -233,24 +224,31 @@ class TransitionModel extends AdminModel
 
 		if ($loadData)
 		{
-			$data = (object) $this->loadFormData();
+			$data = (array) $this->loadFormData();
 		}
+
+		if (empty($data['workflow_id']))
+		{
+			$data['workflow_id'] = (int) $app->getUserStateFromRequest($context . '.filter.workflow_id', 'workflow_id', 0, 'int');
+		}
+
+		// Disable state when no permission to change
+		$disableFields = [];
 
 		if (!$this->canEditState((object) $data))
 		{
-			// Disable fields for display.
-			$form->setFieldAttribute('published', 'disabled', 'true');
-
-			// Disable fields while saving.
-			// The controller has already verified this is a record you can edit.
-			$form->setFieldAttribute('published', 'filter', 'unset');
+			$disableFields[] = 'published';
 		}
 
-		$app = Factory::getApplication();
+		foreach ($disableFields as $field)
+		{
+			$form->setFieldAttribute($field, 'disabled', 'true');
+			$form->setFieldAttribute($field, 'required', 'false');
+			$form->setFieldAttribute($field, 'filter', 'unset');
+		}
 
-		$workflow_id = $app->input->getInt('workflow_id');
-
-		$where = $this->getDbo()->quoteName('workflow_id') . ' = ' . $workflow_id . ' AND ' . $this->getDbo()->quoteName('published') . ' = 1';
+		$where = $this->getDbo()->quoteName('workflow_id') . ' = ' . (int) $data['workflow_id'];
+		$where .= ' AND ' . $this->getDbo()->quoteName('published') . ' = 1';
 
 		$form->setFieldAttribute('from_stage_id', 'sql_where', $where);
 		$form->setFieldAttribute('to_stage_id', 'sql_where', $where);
@@ -279,6 +277,21 @@ class TransitionModel extends AdminModel
 		}
 
 		return $data;
+	}
+
+	public function getWorkflow()
+	{
+		$app = Factory::getApplication();
+
+		$context = $this->option . '.' . $this->name;
+
+		$workflow_id = (int) $app->getUserStateFromRequest($context . '.filter.workflow_id', 'workflow_id', 0, 'int');
+
+		$workflow = $this->getTable('Workflow');
+
+		$workflow->load($workflow_id);
+
+		return (object) $workflow->getProperties();
 	}
 
 	/**

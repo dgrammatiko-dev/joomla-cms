@@ -168,7 +168,7 @@ class PlgWorkflowNotification extends CMSPlugin
 		// Don't send the notification to the active user
 		$key = array_search($user->id, $userIds);
 
-		if ($key)
+		if (is_integer($key))
 		{
 			unset($userIds[$key]);
 		}
@@ -214,11 +214,12 @@ class PlgWorkflowNotification extends CMSPlugin
 					$messageText .= '<br>' . htmlspecialchars($lang->_($data->options['notification_text_author']));
 				}
 
-				$message = array(
+				$message = [
+					'id' => 0,
 					'user_id_to' => $receiver->id,
 					'subject' => sprintf($lang->_('PLG_WORKFLOW_NOTIFICATION_ON_TRANSITION_SUBJECT'), $modelName),
 					'message' => $messageText,
-				);
+				];
 
 				$model_message->save($message);
 			}

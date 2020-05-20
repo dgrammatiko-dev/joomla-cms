@@ -233,6 +233,8 @@ class PlgWorkflowNotification extends CMSPlugin
 
 				$model_message->save($message);
 			}
+
+			$this->app->enqueueMessage(Text::_('PLG_WORKFLOW_NOTIFICATION_SENT'), 'message');
 		}
 
 		return true;
@@ -303,19 +305,16 @@ class PlgWorkflowNotification extends CMSPlugin
 	{
 		// Check for locked inboxes would be better to have _cdf settings in the user_object or a filter in users model
 		$locked = [];
-		if (!empty($userIds))
-		{
-			$db = $this->db;
 
-			$query = $db->getQuery(true);
-			$query->select($db->quoteName('user_id'))
-					->from($db->quoteName('#__messages_cfg'))
-					->whereIn($db->quoteName('user_id'), $userIds)
-					->where($db->quoteName('cfg_name') . '=' . $db->quote('locked'))
-					->where($db->quoteName('cfg_value') . '=1'); 
+		$db = $this->db;
+		$query = $db->getQuery(true);
+		$query->select($db->quoteName('user_id'))
+				->from($db->quoteName('#__messages_cfg'))
+				->whereIn($db->quoteName('user_id'), $userIds)
+				->where($db->quoteName('cfg_name') . '=' . $db->quote('locked'))
+				->where($db->quoteName('cfg_value') . '=1'); 
 
-			$locked = $db->setQuery($query)->loadColumn();
-		}
+		$locked = $db->setQuery($query)->loadColumn();
 
 		return array_diff($userIds, $locked);
 	}

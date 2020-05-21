@@ -9,19 +9,14 @@
 
 defined('_JEXEC') or die;
 
-use Joomla\CMS\Application\CMSApplicationInterface;
 use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Form\Form;
 use Joomla\CMS\Language\Language;
 use Joomla\CMS\Language\Text;
-use Joomla\CMS\Object\CMSObject;
 use Joomla\CMS\Plugin\CMSPlugin;
-use Joomla\CMS\Table\TableInterface;
 use Joomla\CMS\User\User;
 use Joomla\CMS\Workflow\Workflow;
-use Joomla\Component\Content\Administrator\Table\ArticleTable;
-use Joomla\Database\ParameterType;
 use Joomla\Utilities\ArrayHelper;
 
 /**
@@ -110,8 +105,24 @@ class PlgWorkflowNotification extends CMSPlugin
 	 */
 	public function onWorkflowAfterTransition($context, $pks, $data)
 	{
+
+		$parts = explode('.', $context);
+
+		// Check the extension 
+		if (count($parts) < 2)
+		{
+			return false;
+		}
+
+		$component = $this->app->bootComponent($parts[0]);
+
+		if (!$component->isWorkflowActive($context))
+		{
+			return false;
+		}
+
 		// Check if send-mail is active
-		if (empty($data->options['send_mail']) || !$data->options['send_mail'])
+		if (empty($data->options['notification_send_mail']))
 		{
 			return true;
 		}
@@ -127,35 +138,29 @@ class PlgWorkflowNotification extends CMSPlugin
 		// Get UserIds of Receivers
 		$userIds = $this->getUsersFromGroup($data);
 
-		// If there are no receivers, stop here
-		if (empty($userIds))
-		{
-			return true;
-		}
+		// The active user
+		$user = $this->app->getIdentity();
 
 		// Prepare Language for messages
 		$default_language = ComponentHelper::getParams('com_languages')->get('administrator');
 		$debug = $this->app->get('debug_lang');
 
-		// Get the Model of the Item via $context
-		$parts = explode('.', $context);
-
-		$component = $this->app->bootComponent($parts[0]);
-
 		$modelName = $component->getModelName($context);
-
 		$model = $component->getMVCFactory()->createModel($modelName, $this->app->getName(),  ['ignore_request' => true]);
 
-		// Add author of the item to the receivers arry if the param email-author is set
-		if (!empty($data->options['email_author']) && !empty($item->created_by))
+		$authorId = 0; 
+
+		// Add author of the item to the receivers array if the param email-author is set
+		if (!empty($data->options['notification_email_author']) && !empty($item->created_by))
 		{
-			$author = $this->app->getIdentity($item->created_by);
+			$author = User::getInstance($item->created_by);
 
 			if (!empty($author) && !$author->block)
 			{
 				if (!in_array($author->id, $userIds))
 				{
-					$userIds[] = $author->id;
+					$userIds[] = (int) $author->id;
+					$authorId = $author->id;
 				}
 			}
 		}
@@ -170,14 +175,16 @@ class PlgWorkflowNotification extends CMSPlugin
 
 		$toStage = $model_stage->getItem($data->to_stage_id)->title;
 
-		// The active user
-		$user = $this->app->getIdentity();
-
 		foreach ($pks as $pk)
 		{
-			// Get the item whose state has been changed
-			$item = $model->getItem($pk);
+			// Get the title of the item which has changed
+			$title ='';
 
+			if (method_exists($model, 'getItem'))
+			{
+				$title = $model->getItem($pk)->title;
+			}
+      
 			// Send Email to receivers
 			foreach ($userIds as $user_id)
 			{
@@ -186,26 +193,30 @@ class PlgWorkflowNotification extends CMSPlugin
 				// Load language for messaging
 				$lang = Language::getInstance($user->getParam('admin_language', $default_language), $debug);
 				$lang->load('plg_workflow_notification');
-				$messageText = sprintf($lang->_('PLG_WORKFLOW_NOTIFICATION_ON_TRANSITION_MSG'), $item->title, $user->name, $lang->_($toStage));
 
-				if (!empty($data->options['text'] && $user_id !== $author->id))
+				$messageText = sprintf($lang->_('PLG_WORKFLOW_NOTIFICATION_ON_TRANSITION_MSG'), $title, $user->name, $lang->_($toStage));
+
+				if (!empty($data->options['notification_text'] && $user_id !== $authorId))
 				{
-					$messageText .= ' ' . htmlspecialchars($lang->_($data->options['text']));
+					$messageText .= '<br>' . htmlspecialchars($lang->_($data->options['notification_text']));
 				}
 
-				if (!empty($data->options['author_text'] && $user_id === $author->id))
+				if (!empty($data->options['notification_author_text'] && $user_id === $authorId))
 				{
-					$messageText .= ' ' . htmlspecialchars($lang->_($data->options['text_author']));
+					$messageText .= '<br>' . htmlspecialchars($lang->_($data->options['notification_text_author']));
 				}
 
-				$message = array(
+				$message = [
+					'id' => 0,
 					'user_id_to' => $receiver->id,
 					'subject' => sprintf($lang->_('PLG_WORKFLOW_NOTIFICATION_ON_TRANSITION_SUBJECT'), $modelName),
 					'message' => $messageText,
-				);
+				];
 
 				$model_message->save($message);
 			}
+
+			$this->app->enqueueMessage(Text::_('PLG_WORKFLOW_NOTIFICATION_SENT'), 'message');
 		}
 
 		return true;
@@ -222,10 +233,21 @@ class PlgWorkflowNotification extends CMSPlugin
 	 */
 	private function getUsersFromGroup($data): Array
 	{
-		// Single userIds
-		$users = !empty($data->options['receivers']) ? $data->options['receivers'] : []; 
+		$users = [];
 
-		$groups = !empty($data->options['groups']) ? $data->options['groups'] : []; 
+		// Single userIds
+		if (!empty($data->options['notification_receivers']))
+		{
+			$users = ArrayHelper::toInteger($data->options['notification_receivers']);
+		} 
+
+		// Usergroups
+		$groups = [];
+
+		if (!empty($data->options['notification_groups']))
+		{
+			$groups = ArrayHelper::toInteger($data->options['notification_groups']);
+		}
 
 		$users2 = [];
 
@@ -238,6 +260,8 @@ class PlgWorkflowNotification extends CMSPlugin
 			$model->setState('list.select', 'id');
 			$model->setState('filter.groups', $groups);
 			$model->setState('filter.state', 0);
+			$model->setState('filter.active', 1);
+			$model->setState('filter.sendEmail', 1);
 
 			// Ids from usergroups 
 			$groupUsers = $model->getItems();	
@@ -245,8 +269,35 @@ class PlgWorkflowNotification extends CMSPlugin
 		}
 
 		// Merge userIds from individual entries and userIDs from groups
-		$userIds= array_unique(array_merge($users, $users2));
+		$userIds = array_unique(array_merge($users, $users2));
 
 		return $userIds;
+	}
+
+	/*
+	 * Remove receivers who have locked their message inputbox	
+	 * 
+	 * @param   array  $uerIds  The userIds which must be checked
+	 *
+	 * @return   array  users with active message input box
+	 *
+	 * @since   __DEPLOY_VERSION__
+	 */
+	private function removeLocked($userIds): Array
+	{
+		// Check for locked inboxes would be better to have _cdf settings in the user_object or a filter in users model
+		$locked = [];
+
+		$db = $this->db;
+		$query = $db->getQuery(true);
+		$query->select($db->quoteName('user_id'))
+				->from($db->quoteName('#__messages_cfg'))
+				->whereIn($db->quoteName('user_id'), $userIds)
+				->where($db->quoteName('cfg_name') . '=' . $db->quote('locked'))
+				->where($db->quoteName('cfg_value') . '=1'); 
+
+		$locked = $db->setQuery($query)->loadColumn();
+
+		return array_diff($userIds, $locked);
 	}
 }

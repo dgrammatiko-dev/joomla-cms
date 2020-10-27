@@ -9,14 +9,18 @@
 
 defined('_JEXEC') or die;
 
+use Joomla\CMS\Categories\CategoryFactoryInterface;
 use Joomla\CMS\Dispatcher\ComponentDispatcherFactoryInterface;
 use Joomla\CMS\Extension\ComponentInterface;
 use Joomla\CMS\Extension\MVCComponent;
+use Joomla\CMS\Extension\Service\Provider\CategoryFactory;
 use Joomla\CMS\Extension\Service\Provider\ComponentDispatcherFactory;
 use Joomla\CMS\Extension\Service\Provider\MVCFactory;
 use Joomla\CMS\MVC\Factory\MVCFactoryInterface;
+use Joomla\Component\Media\Administrator\Extension\MediaComponent;
 use Joomla\DI\Container;
 use Joomla\DI\ServiceProviderInterface;
+use Joomla\Registry\Registry;
 
 /**
  * The media service provider.
@@ -36,6 +40,7 @@ return new class implements ServiceProviderInterface
 	 */
 	public function register(Container $container)
 	{
+		$container->registerServiceProvider(new CategoryFactory('\\Joomla\\Component\\Media'));
 		$container->registerServiceProvider(new MVCFactory('\\Joomla\\Component\\Media'));
 		$container->registerServiceProvider(new ComponentDispatcherFactory('\\Joomla\\Component\\Media'));
 
@@ -43,9 +48,10 @@ return new class implements ServiceProviderInterface
 			ComponentInterface::class,
 			function (Container $container)
 			{
-				$component = new MVCComponent($container->get(ComponentDispatcherFactoryInterface::class));
+				$component = new MediaComponent($container->get(ComponentDispatcherFactoryInterface::class));
 
 				$component->setMVCFactory($container->get(MVCFactoryInterface::class));
+				$component->setCategoryFactory($container->get(CategoryFactoryInterface::class));
 
 				return $component;
 			}

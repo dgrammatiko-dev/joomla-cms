@@ -13,6 +13,7 @@ namespace Joomla\Plugin\Filesystem\Virtual\Adapter;
 
 use Joomla\CMS\Categories\Categories;
 use Joomla\CMS\Categories\CategoryNode;
+use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Date\Date;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Filesystem\File;
@@ -23,6 +24,7 @@ use Joomla\CMS\Helper\MediaHelper;
 use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Image\Image;
 use Joomla\CMS\Language\Text;
+use Joomla\CMS\Router\Route;
 use Joomla\CMS\String\PunycodeHelper;
 use Joomla\CMS\Uri\Uri;
 use Joomla\Component\Categories\Administrator\Helper\CategoriesHelper;
@@ -37,6 +39,8 @@ use Joomla\Component\Media\Administrator\Exception\InvalidPathException;
  */
 class VirtualAdapter implements AdapterInterface
 {
+	protected $folderpath = 'media/com_media/files';
+
 	/**
 	 * Returns the requested file or folder. The returned object
 	 * has the following properties available:
@@ -58,7 +62,6 @@ class VirtualAdapter implements AdapterInterface
 	 * @return  \stdClass
 	 *
 	 * @since   4.0.0
-	 * @throws  \Exception
 	 */
 	public function getFile(string $path = '/'): \stdClass
 	{
@@ -88,11 +91,7 @@ class VirtualAdapter implements AdapterInterface
 		}
 
 		// Check if file
-		// return $this->getFileInformation($path);
-
-		// Check if file exists
-		throw new FileNotFoundException;
-
+		return $this->getFileInformation($path);
 	}
 
 	/**
@@ -136,7 +135,7 @@ class VirtualAdapter implements AdapterInterface
 		// Read the files
 		foreach ($files as $file)
 		{
-			$data[] = $this->getFileInformation($file);
+			$data[] = $this->getFileInformation($file->path);
 		}
 
 		// Return the data
@@ -183,9 +182,52 @@ class VirtualAdapter implements AdapterInterface
 		return Categories::getInstance('Media')->get($id, true);
 	}
 
+	/**
+	 * Load the file object based on a path
+	 *
+	 * @param string $path
+	 *
+	 * @return stdClass
+	 */
+	protected function loadFile($path)
+	{
+		$fileTable = $this->loadFileTable($path);
+
+		return (object) $fileTable->getProperties();
+	}
+
 	protected function loadFiles($path)
 	{
-		return [];
+		$category = $this->loadCategory($path);
+
+		$db = Factory::getDbo();
+
+		$query = $db->getQuery(true);
+
+		$query->select(
+			[
+				$db->quoteName('id'),
+				$db->quoteName('title'),
+				$db->quoteName('alias'),
+				$db->quoteName('extension'),
+				$db->quoteName('access'),
+				$db->quoteName('catid'),
+				$db->quoteName('filepath'),
+				$db->quoteName('created'),
+				$db->quoteName('modified'),
+			]
+		)
+		->from($db->quoteName('#__media_files'))
+		->where($db->quoteName('catid') . ' = ' . (int) $category->id);
+
+		$files = $db->setQuery($query)->loadObjectList();
+
+		foreach ($files as $file)
+		{
+			$file->path = $category->path . '/' . $file->alias . '.' . $file->extension;
+		}
+
+		return $files;
 	}
 
 	protected function loadCategoryTable($path)
@@ -200,6 +242,24 @@ class VirtualAdapter implements AdapterInterface
 		]);
 
 		return $categoryTable;
+	}
+
+	protected function loadFileTable($path)
+	{
+		$catpath = \dirname($path);
+
+		$category = $this->loadCategory($catpath);
+
+		$alias = OutputFilter::stringUrlSafe(File::stripExt(\basename($path)));
+
+		$fileTable = Factory::getApplication()->bootComponent('Media')->getMVCFactory()->createModel('File', 'Administrator', ['ignore_request' => true])->getTable('File');
+
+		$fileTable->load([
+			'catid' => (int) $category->id,
+			'alias' => $alias
+		]);
+
+		return $fileTable;
 	}
 
 	/**
@@ -235,18 +295,6 @@ class VirtualAdapter implements AdapterInterface
 	{
 		$category = $this->loadCategory($path);
 
-		$children = $category->getChildren();
-
-		$alias = OutputFilter::stringURLSafe($name);
-
-		foreach ($children as $child)
-		{
-			if ($child->alias == $alias)
-			{
-				throw new \Exception(Text::_('COM_MEDIA_CREATE_NEW_FOLDER_ERROR'));
-			}
-		}
-
 		$data = [
 			'title' => $name,
 			'published' => 1,
@@ -278,11 +326,39 @@ class VirtualAdapter implements AdapterInterface
 	{
 		$name = $this->getSafeName($name);
 
-		$localPath = $this->getLocalPath($path . '/' . $name);
+		$category = $this->loadCategory($path);
 
-		$this->checkContent($localPath, $data);
+		$filepath = substr(sha1($data . \uniqid()), 0, 2) . '/' . substr(sha1($data), 0, 2);
 
-		File::write($localPath, $data);
+		$filename = sha1(\uniqid());
+
+		$localPath = JPATH_ROOT . '/' . $this->folderpath . '/' . $filepath . '/';
+
+		while (\file_exists($localPath . $filename))
+		{
+			$filename = sha1(\uniqid());
+		}
+
+		$this->checkContent($name, $localPath . $filename, $data);
+
+		File::write($localPath . $filename, $data);
+
+		$fileTable = Factory::getApplication()->bootComponent('Media')->getMVCFactory()->createModel('File', 'Administrator', ['ignore_request' => true])->getTable('File');
+
+		$file = new \stdClass;;
+
+		$file->title = File::stripExt($name);
+		$file->extension = File::getExt($name);
+		$file->mime = MediaHelper::getMimeType($localPath . $filename, MediaHelper::isImage($file->title . '.' . $file->extension));
+		$file->catid = (int) $category->id;
+		$file->filepath = $this->folderpath . '/' . $filepath . '/' . $filename;
+
+		$result = $fileTable->save($file);
+
+		if (!$result)
+		{
+			throw new \Exception($fileTable->getError(), 500);
+		}
 
 		return $name;
 	}
@@ -308,7 +384,7 @@ class VirtualAdapter implements AdapterInterface
 			throw new FileNotFoundException;
 		}
 
-		$this->checkContent($localPath, $data);
+		$this->checkContent($name, $localPath, $data);
 
 		File::write($localPath, $data);
 	}
@@ -335,7 +411,6 @@ class VirtualAdapter implements AdapterInterface
 			}
 
 			// TODO Delete files
-
 			$categoryTable->delete();
 
 			return;
@@ -402,7 +477,7 @@ class VirtualAdapter implements AdapterInterface
 		$obj->path      = '/' . $folder->path;
 		$obj->extension = '';
 		$obj->size      = '';
-		$obj->mime_type = '';
+		$obj->mime_type = 'directory';
 		$obj->width     = 0;
 		$obj->height    = 0;
 
@@ -436,23 +511,26 @@ class VirtualAdapter implements AdapterInterface
 	 *
 	 * @since   4.0.0
 	 */
-	private function getPathInformation(string $path): \stdClass
+	private function getFileInformation(string $path): \stdClass
 	{
+		$file = $this->loadFile($path);
 
-		// The boolean if it is a dir
-		$isDir = is_dir($path);
+		if (empty($file->id))
+		{
+			throw new FileNotFoundException;
+		}
 
-		$createDate   = $this->getDate($folder->created_time);
-		$modifiedDate = $this->getDate($folder->modified_time);
+		$createDate   = $this->getDate($file->created);
+		$modifiedDate = $this->getDate($file->modified);
 
 		// Set the values
 		$obj            = new \stdClass;
-		$obj->type      = $isDir ? 'dir' : 'file';
-		$obj->name      = $this->getFileName($path);
-		$obj->path      = str_replace($this->rootPath, '', $path);
-		$obj->extension = !$isDir ? File::getExt($obj->name) : '';
-		$obj->size      = !$isDir ? filesize($path) : '';
-		$obj->mime_type = MediaHelper::getMimeType($path, MediaHelper::isImage($obj->name));
+		$obj->type      = 'file';
+		$obj->name      = $file->title . '.' . $file->extension;
+		$obj->path      = $this->getUrl($path);
+		$obj->extension = $file->extension;
+		$obj->size      = filesize(JPATH_ROOT . '/' . $file->filepath);
+		$obj->mime_type = MediaHelper::getMimeType(JPATH_ROOT . '/' . $file->filepath, MediaHelper::isImage($file->title . '.' . $file->extension));
 		$obj->width     = 0;
 		$obj->height    = 0;
 
@@ -462,15 +540,15 @@ class VirtualAdapter implements AdapterInterface
 		$obj->modified_date           = $modifiedDate->format('c', true);
 		$obj->modified_date_formatted = HTMLHelper::_('date', $modifiedDate, Text::_('DATE_FORMAT_LC5'));
 
-		if (MediaHelper::isImage($obj->name))
+		if (MediaHelper::isImage($file->title . '.' . $file->extension))
 		{
 			// Get the image properties
-			$props       = Image::getImageFileProperties($path);
+			$props       = Image::getImageFileProperties(JPATH_ROOT . '/' . $file->filepath);
 			$obj->width  = $props->width;
 			$obj->height = $props->height;
 
 			// Todo : Change this path to an actual thumbnail path
-			$obj->thumb_path = $this->getUrl($obj->path);
+			$obj->thumb_path = $this->getUrl($path);
 		}
 
 		return $obj;
@@ -774,7 +852,9 @@ class VirtualAdapter implements AdapterInterface
 	 */
 	public function getUrl(string $path): string
 	{
-		return Uri::root() . $this->getEncodedPath($this->filePath . $path);
+		$file = $this->loadFile($path);
+
+		return Route::_('index.php?option=com_media&view=file&id=' . (int) $file->id . ':' . $file->alias . '.' . $file->extension, true, Route::TLS_IGNORE, true);
 	}
 
 	/**
@@ -919,15 +999,13 @@ class VirtualAdapter implements AdapterInterface
 	 * @since   4.0.0
 	 * @throws  \Exception
 	 */
-	private function checkContent(string $localPath, string $mediaContent)
+	private function checkContent(string $name, string $localPath, string $mediaContent)
 	{
-		$name = $this->getFileName($localPath);
-
 		// The helper
 		$helper = new MediaHelper;
 
 		// @todo find a better way to check the input, by not writing the file to the disk
-		$tmpFile = Path::clean(\dirname($localPath) . '/' . uniqid() . '.' . File::getExt($name));
+		$tmpFile = Path::clean($localPath . '_temp.' . File::getExt($name));
 
 		if (!File::write($tmpFile, $mediaContent))
 		{

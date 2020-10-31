@@ -352,6 +352,7 @@ class VirtualAdapter implements AdapterInterface
 		$file->mime = MediaHelper::getMimeType($localPath . $filename, MediaHelper::isImage($file->title . '.' . $file->extension));
 		$file->catid = (int) $category->id;
 		$file->filepath = $this->folderpath . '/' . $filepath . '/' . $filename;
+		$file->filesize = filesize($localPath . $filename);
 
 		$result = $fileTable->save($file);
 
@@ -529,8 +530,8 @@ class VirtualAdapter implements AdapterInterface
 		$obj->name      = $file->title . '.' . $file->extension;
 		$obj->path      = $this->getUrl($path);
 		$obj->extension = $file->extension;
-		$obj->size      = filesize(JPATH_ROOT . '/' . $file->filepath);
-		$obj->mime_type = MediaHelper::getMimeType(JPATH_ROOT . '/' . $file->filepath, MediaHelper::isImage($file->title . '.' . $file->extension));
+		$obj->size      = (int) $file->filesize;
+		$obj->mime_type = $file->mime;
 		$obj->width     = 0;
 		$obj->height    = 0;
 

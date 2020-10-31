@@ -643,6 +643,31 @@ CREATE TABLE IF NOT EXISTS `#__finder_types` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `#__media_files`
+--
+
+CREATE TABLE IF NOT EXISTS `#__media_files` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `asset_id` int(11) NOT NULL DEFAULT 0,
+  `title` varchar(255) NOT NULL,
+  `alias` varchar(255) NOT NULL,
+  `extension` varchar(50) NOT NULL,
+  `mime` varchar(255) NOT NULL,
+  `filesize` int(11) NOT NULL,
+  `access` int(11) NOT NULL,
+  `catid` int(11) NOT NULL,
+  `filepath` varchar(255) NOT NULL,
+  `params` text NOT NULL DEFAULT '{}',
+  `created` datetime DEFAULT NULL,
+  `created_by` int(11) NOT NULL,
+  `modified` datetime DEFAULT NULL,
+  `modified_by` int(11) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `#__messages`
 --
 

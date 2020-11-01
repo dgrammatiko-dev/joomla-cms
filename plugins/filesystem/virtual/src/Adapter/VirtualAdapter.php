@@ -528,7 +528,7 @@ class VirtualAdapter implements AdapterInterface
 		$obj            = new \stdClass;
 		$obj->type      = 'file';
 		$obj->name      = $file->title . '.' . $file->extension;
-		$obj->path      = $this->getUrl($path);
+		$obj->path      = '/' . $path;
 		$obj->extension = $file->extension;
 		$obj->size      = (int) $file->filesize;
 		$obj->mime_type = $file->mime;
@@ -855,7 +855,7 @@ class VirtualAdapter implements AdapterInterface
 	{
 		$file = $this->loadFile($path);
 
-		return Route::_('index.php?option=com_media&view=file&id=' . (int) $file->id . ':' . $file->alias . '.' . $file->extension, true, Route::TLS_IGNORE, true);
+		return Route::_('index.php?option=com_media&view=file&format=raw&id=' . (int) $file->id . ':' . $file->alias . '.' . $file->extension, true, Route::TLS_IGNORE, true);
 	}
 
 	/**

@@ -952,21 +952,6 @@ class VirtualAdapter implements AdapterInterface
 	}
 
 	/**
-	 * Replace spaces on a path with %20
-	 *
-	 * @param   string  $path  The Path to be encoded
-	 *
-	 * @return  string
-	 *
-	 * @since   4.0.0
-	 * @throws  FileNotFoundException
-	 */
-	private function getEncodedPath(string $path): string
-	{
-		return str_replace(" ", "%20", $path);
-	}
-
-	/**
 	 * Creates a safe file name for the given name.
 	 *
 	 * @param   string  $name  The filename

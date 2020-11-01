@@ -274,7 +274,9 @@ class VirtualAdapter implements AdapterInterface
 	 */
 	public function getResource(string $path)
 	{
-		return fopen($this->rootPath . '/' . $path, 'r');
+		$file = $this->loadFile($path);
+
+		return fopen(JPATH_ROOT . '/' . $file->filepath, 'r');
 	}
 
 	/**
@@ -526,9 +528,10 @@ class VirtualAdapter implements AdapterInterface
 
 		// Set the values
 		$obj            = new \stdClass;
+		$obj->id		= (int) $file->id;
 		$obj->type      = 'file';
 		$obj->name      = $file->title . '.' . $file->extension;
-		$obj->path      = '/' . $path;
+		$obj->path      = '/' . ltrim($path, '/');
 		$obj->extension = $file->extension;
 		$obj->size      = (int) $file->filesize;
 		$obj->mime_type = $file->mime;
@@ -853,9 +856,8 @@ class VirtualAdapter implements AdapterInterface
 	 */
 	public function getUrl(string $path): string
 	{
-		$file = $this->loadFile($path);
-
-		return Route::_('index.php?option=com_media&view=file&format=raw&id=' . (int) $file->id . ':' . $file->alias . '.' . $file->extension, true, Route::TLS_IGNORE, true);
+		// @TODO use clean method to route to frontend
+		return \str_replace('/administrator', '', Route::_('index.php?option=com_media&view=file&format=raw&path=virtual-0:' . $path, true, Route::TLS_IGNORE, true));
 	}
 
 	/**

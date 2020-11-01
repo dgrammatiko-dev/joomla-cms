@@ -54,12 +54,8 @@ class Dispatcher extends ComponentDispatcher
 		$asset  = $this->input->get('asset');
 		$author = $this->input->get('author');
 
-		$view = $this->input->getCmd('view');
-		$format = $this->input->getCmd('format');
-
 		// Access check
-		if (!($view === 'file' && $format === 'raw')
-			&& !$user->authorise('core.manage', 'com_media')
+		if (!$user->authorise('core.manage', 'com_media')
 			&& (!$asset || (!$user->authorise('core.edit', $asset)
 			&& !$user->authorise('core.create', $asset)
 			&& count($user->getAuthorisedCategories($asset, 'core.create')) == 0)

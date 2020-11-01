@@ -9,6 +9,8 @@
 
 defined('_JEXEC') or die;
 
+use Joomla\CMS\Factory;
+use Joomla\CMS\Filesystem\Path;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Plugin\CMSPlugin;
 use Joomla\Component\Media\Administrator\Event\MediaProviderEvent;
@@ -101,5 +103,37 @@ class PlgFileSystemVirtual extends CMSPlugin implements ProviderInterface
 		}
 
 		return $adapters;
+	}
+
+	public static function onAjaxVirtual()
+	{
+		$app = Factory::getApplication();
+
+		$id = (int) $app->input->getInt('id');
+
+		$fileTable = $app->bootComponent('Media')->getMVCFactory()->createModel('File', 'Administrator', ['ignore_request' => true])->getTable('File');
+
+		$fileTable->load($id);
+
+        if (empty($fileTable->id) || !in_array($fileTable->access, Factory::getUser()->getAuthorisedViewLevels()))
+        {
+            throw new \Exception(Text::_('JERROR_ALERTNOAUTHOR'), 403);
+        }
+
+		$app->setHeader('Content-Type', $fileTable->mime);
+		$app->setHeader('Content-Transfer-Encoding', 'Binary');
+		$app->setHeader('Expires', '0');
+		$app->setHeader('Cache-Control', 'must-revalidate');
+		$app->setHeader('Pragma', 'public');
+		$app->setHeader('Content-Length', $fileTable->filesize);
+		$app->setHeader('Content-disposition', 'attachment; filename="' . $fileTable->title . '.' . $fileTable->extension . '"');
+
+		$app->sendHeaders();
+
+		$filepath = Path::check(JPATH_SITE . '/' . $fileTable->filepath);
+
+        readfile($filepath);
+
+        exit;
 	}
 }

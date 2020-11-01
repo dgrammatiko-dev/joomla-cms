@@ -11,7 +11,6 @@ namespace Joomla\Component\Media\Administrator\Model;
 
 \defined('_JEXEC') or die;
 
-use Joomla\CMS\Factory;
 use Joomla\CMS\Form\FormHelper;
 use Joomla\CMS\MVC\Model\FormModel;
 use Joomla\CMS\Plugin\PluginHelper;
@@ -23,29 +22,6 @@ use Joomla\CMS\Plugin\PluginHelper;
  */
 class FileModel extends FormModel
 {
-	/**
-	 * Method to auto-populate the state.
-	 *
-	 * This method should only be called once per instantiation and is designed
-	 * to be called on the first call to the getState() method unless the
-	 * configuration flag to ignore the request is set.
-	 *
-	 * @return  void
-	 *
-	 * @note    Calling getState in this method will result in recursion.
-	 * @since   4.0.0
-	 */
-	protected function populateState()
-	{
-		parent::populateState();
-
-		$app = Factory::getApplication();
-
-		$path = $app->input->getString('path');
-
-		$this->setState('file.path', $path);
-	}
-
 	/**
 	 * Method to get the record form.
 	 *
@@ -72,27 +48,6 @@ class FileModel extends FormModel
 		}
 
 		return $form;
-	}
-
-	public function getFile()
-	{
-		$path = $this->getState('file.path');
-
-		$file = $this->getFileInformation($path);
-
-		if (empty($file->id))
-		{
-			return false;
-		}
-
-		$table = $this->getTable();
-
-		if (!$table->load($file->id))
-		{
-			return false;
-		}
-
-		return (object) $table->getProperties();
 	}
 
 	/**

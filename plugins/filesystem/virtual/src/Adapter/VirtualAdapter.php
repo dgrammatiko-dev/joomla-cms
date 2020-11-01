@@ -31,6 +31,7 @@ use Joomla\Component\Categories\Administrator\Helper\CategoriesHelper;
 use Joomla\Component\Media\Administrator\Adapter\AdapterInterface;
 use Joomla\Component\Media\Administrator\Exception\FileNotFoundException;
 use Joomla\Component\Media\Administrator\Exception\InvalidPathException;
+use Joomla\Utilities\ArrayHelper;
 
 /**
  * Virtual file adapter.
@@ -413,7 +414,32 @@ class VirtualAdapter implements AdapterInterface
 				throw new FileNotFoundException;
 			}
 
-			// TODO Delete files
+			// Delete files
+			$db = Factory::getDbo();
+
+			$tree = $categoryTable->getTree();
+
+			$catids = ArrayHelper::getColumn($tree, 'id');
+			$catids = ArrayHelper::toInteger($catids);
+
+			$query = $db->getQuery(true);
+
+			$query	->select($db->quoteName('filepath'))
+					->from($db->quoteName('#__media_files'))
+					->where($db->quoteName('catid') . ' IN(' . implode(',', $catids) . ')');
+
+			$filepaths = $db->setQuery($query)->loadColumn();
+
+			$query->clear('select')->delete();
+
+			$db->setQuery($query)->execute();
+
+			foreach ($filepaths as $filepath)
+			{
+				File::delete(JPATH_ROOT . '/' . $filepath);
+			}
+
+			// Delete categories
 			$categoryTable->delete();
 
 			return;
@@ -423,31 +449,12 @@ class VirtualAdapter implements AdapterInterface
 			// Do nothing
 		}
 
-		$localPath = $this->getLocalPath($path);
+		// No folder, assume it's a file
+		$file = $this->loadFileTable($path);
 
-		if (is_file($localPath))
-		{
-			if (!File::exists($localPath))
-			{
-				throw new FileNotFoundException;
-			}
+		File::delete(JPATH_ROOT . '/' . $file->filepath);
 
-			$success = File::delete($localPath);
-		}
-		else
-		{
-			if (!Folder::exists($localPath))
-			{
-				throw new FileNotFoundException;
-			}
-
-			$success = Folder::delete($localPath);
-		}
-
-		if (!$success)
-		{
-			throw new \Exception('Delete not possible!');
-		}
+		$file->delete();
 	}
 
 	/**

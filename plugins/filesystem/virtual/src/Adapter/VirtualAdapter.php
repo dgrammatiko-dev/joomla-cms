@@ -863,8 +863,10 @@ class VirtualAdapter implements AdapterInterface
 	 */
 	public function getUrl(string $path): string
 	{
+		$file = $this->loadFile($path);
+
 		// @TODO use clean method to route to frontend
-		return \str_replace('/administrator', '', Route::_('index.php?option=com_media&view=file&format=raw&path=virtual-0:' . $path, true, Route::TLS_IGNORE, true));
+		return \str_replace('/administrator', '', Route::_('index.php?option=com_ajax&plugin=virtual&group=filesystem&format=raw&id=' . (int) $file->id . ':' . $file->alias . '.' . $file->extension, true, Route::TLS_IGNORE, true));
 	}
 
 	/**

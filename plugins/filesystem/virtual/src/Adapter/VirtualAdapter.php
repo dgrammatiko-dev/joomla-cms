@@ -378,6 +378,8 @@ class VirtualAdapter implements AdapterInterface
 	 *
 	 * @since   4.0.0
 	 * @throws  \Exception
+	 *
+	 * @todo Implement
 	 */
 	public function updateFile(string $name, string $path, $data)
 	{
@@ -613,6 +615,8 @@ class VirtualAdapter implements AdapterInterface
 	 *
 	 * @since   4.0.0
 	 * @throws  \Exception
+	 *
+	 * @todo Implement
 	 */
 	public function copy(string $sourcePath, string $destinationPath, bool $force = false): string
 	{
@@ -662,6 +666,8 @@ class VirtualAdapter implements AdapterInterface
 	 *
 	 * @since   4.0.0
 	 * @throws  \Exception
+	 *
+	 * @todo Implement
 	 */
 	private function copyFile(string $sourcePath, string $destinationPath, bool $force = false)
 	{
@@ -693,6 +699,8 @@ class VirtualAdapter implements AdapterInterface
 	 *
 	 * @since   4.0.0
 	 * @throws  \Exception
+	 *
+	 * @Todo Implement
 	 */
 	private function copyFolder(string $sourcePath, string $destinationPath, bool $force = false)
 	{
@@ -726,6 +734,8 @@ class VirtualAdapter implements AdapterInterface
 	 *
 	 * @since   4.0.0
 	 * @throws  \Exception
+	 *
+	 * @todo Implement
 	 */
 	public function move(string $sourcePath, string $destinationPath, bool $force = false): string
 	{
@@ -773,6 +783,8 @@ class VirtualAdapter implements AdapterInterface
 	 *
 	 * @since   4.0.0
 	 * @throws  \Exception
+	 *
+	 * @todo Implement
 	 */
 	private function moveFile(string $sourcePath, string $destinationPath, bool $force = false)
 	{
@@ -804,6 +816,8 @@ class VirtualAdapter implements AdapterInterface
 	 *
 	 * @since   4.0.0
 	 * @throws  \Exception
+	 *
+	 * @todo Implement
 	 */
 	private function moveFolder(string $sourcePath, string $destinationPath, bool $force = false)
 	{
@@ -866,7 +880,7 @@ class VirtualAdapter implements AdapterInterface
 		$file = $this->loadFile($path);
 
 		// @TODO use clean method to route to frontend
-		return \str_replace('/administrator', '', Route::_('index.php?option=com_ajax&plugin=virtual&group=filesystem&format=raw&id=' . (int) $file->id . ':' . $file->alias . '.' . $file->extension, true, Route::TLS_IGNORE, true));
+		return \str_replace('/administrator', '', Route::_('index.php?option=com_ajax&plugin=virtual&group=filesystem&format=raw&id=' . (int) $file->id . ':' . $file->alias . '.' . $file->extension, true));
 	}
 
 	/**
@@ -891,6 +905,8 @@ class VirtualAdapter implements AdapterInterface
 	 * @return  \stdClass[]
 	 *
 	 * @since   4.0.0
+	 *
+	 * @todo Implement
 	 */
 	public function search(string $path, string $needle, bool $recursive = false): array
 	{
@@ -1028,6 +1044,8 @@ class VirtualAdapter implements AdapterInterface
 	 *
 	 * @since   4.0.0
 	 * @throws  \Exception
+	 *
+	 * @todo Remove
 	 */
 	private function getFileName(string $path): string
 	{
@@ -1051,6 +1069,8 @@ class VirtualAdapter implements AdapterInterface
 	 *
 	 * @since   4.0.0
 	 * @throws  InvalidPathException
+	 *
+	 * @todo Remove
 	 */
 	private function getLocalPath(string $path): string
 	{

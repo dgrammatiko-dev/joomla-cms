@@ -422,4 +422,21 @@ export default {
   [types.HIDE_CONFIRM_DELETE_MODAL]: (state) => {
     state.showConfirmDeleteModal = false;
   },
+
+
+  /**
+   * Show the Permissions modal
+   * @param state
+   */
+  [types.SHOW_PERMISSIONS_MODAL]: (state) => {
+    state.showPermissionsModal = true;
+  },
+
+  /**
+   * Hide the Permissions modal
+   * @param state
+   */
+  [types.HIDE_PERMISSIONS_MODAL]: (state) => {
+    state.showPermissionsModal = false;
+  },
 };

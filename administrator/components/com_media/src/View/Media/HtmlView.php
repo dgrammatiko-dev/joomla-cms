@@ -62,6 +62,8 @@ class HtmlView extends BaseHtmlView
 
 		// Get enabled adapters
 		$this->providers = $this->get('Providers');
+
+		// This needs a conditional for the virtual plugin (if disable return false and we will handle it in the Vue)
 		$this->userGroups = $this->get('userGroups');
 
 		// Check that there are providers

@@ -67,6 +67,9 @@ export default {
   showRenameModal: false,
   // The preview item
   previewItem: null,
+  // The permissions modal and item reference
+  showPermissionsModal: false,
+  permissionsItem: null,
   // The Search Query
   search: '',
 };

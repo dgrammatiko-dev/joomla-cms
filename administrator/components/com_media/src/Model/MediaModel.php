@@ -80,6 +80,9 @@ class MediaModel extends BaseDatabaseModel
 				unset($value->rgt);
 			}
 		}
+
+		// We really want only the children groups of the current user
+		// Eg user can only affect groups with lesser level
 		return $groups;
 	}
 }

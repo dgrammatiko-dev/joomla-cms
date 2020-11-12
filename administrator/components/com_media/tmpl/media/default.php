@@ -50,6 +50,18 @@ $config = array(
 	'isModal'                 => $tmpl === 'component',
 );
 $this->document->addScriptOptions('com_media', $config);
+
+// Hardcoded just for demo
+$actions = [
+		['name' => 'Create', 'state' => false],
+		['name' => 'Delete', 'state' => false],
+		['name' => 'Rename', 'state' => false],
+		['name' => 'View', 'state' => false],
+		['name' => 'Edit', 'state' => false],
+]
+
+// Use scriptOptions instead of hardcoding script elements...
 ?>
 <script id="default-groups" type="application/ld+json"><?php echo json_encode($this->userGroups); ?></script>
+<script id="default-permission-actions" type="application/ld+json"><?php echo json_encode($actions); ?></script>
 <div id="com-media"></div>

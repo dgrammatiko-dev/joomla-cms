@@ -20,6 +20,7 @@
     <media-rename-modal />
     <media-share-modal />
     <media-confirm-delete-modal />
+    <media-permissions-modal />
   </div>
 </template>
 

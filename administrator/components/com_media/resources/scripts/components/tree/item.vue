@@ -12,6 +12,9 @@
       <span class="item-icon"><span :class="iconClass" /></span>
       <span class="item-name">{{ item.name }}</span>
     </a>
+    <a>
+      <span @click.stop.prevent="onItemPermissionClick()" class="item-permissions">permissions</span>
+    </a>
     <transition name="slide-fade">
       <media-tree
         v-if="hasChildren"
@@ -26,6 +29,7 @@
 
 <script>
 import navigable from '../../mixins/navigable.es6';
+import * as types from "../../store/mutation-types.es6";
 
 export default {
   name: 'MediaTreeItem',
@@ -81,6 +85,10 @@ export default {
     onItemClick() {
       this.navigateTo(this.item.path);
     },
+
+    onItemPermissionClick(e) {
+      this.$store.commit(types.SHOW_PERMISSIONS_MODAL);
+    }
   },
 };
 </script>

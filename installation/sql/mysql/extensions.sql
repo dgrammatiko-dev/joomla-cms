@@ -657,7 +657,7 @@ CREATE TABLE IF NOT EXISTS `#__media_files` (
   `access` int(11) NOT NULL,
   `catid` int(11) NOT NULL,
   `filepath` varchar(255) NOT NULL,
-  `params` text NOT NULL DEFAULT '{}',
+  `params` text NOT NULL,
   `created` datetime DEFAULT NULL,
   `created_by` int(11) NOT NULL,
   `modified` datetime DEFAULT NULL,

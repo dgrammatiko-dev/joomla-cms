@@ -51,4 +51,5 @@ $config = array(
 );
 $this->document->addScriptOptions('com_media', $config);
 ?>
+<script id="default-groups" type="application/ld+json"><?php echo json_encode($this->userGroups); ?></script>
 <div id="com-media"></div>

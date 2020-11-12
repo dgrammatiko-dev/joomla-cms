@@ -12,6 +12,7 @@ namespace Joomla\Component\Media\Administrator\Model;
 \defined('_JEXEC') or die;
 
 use Joomla\CMS\Factory;
+use Joomla\CMS\Helper\UserGroupsHelper;
 use Joomla\CMS\MVC\Model\BaseDatabaseModel;
 use Joomla\CMS\Plugin\PluginHelper;
 use Joomla\Component\Media\Administrator\Event\MediaProviderEvent;
@@ -58,5 +59,27 @@ class MediaModel extends BaseDatabaseModel
 		}
 
 		return $results;
+	}
+
+	/**
+	 * Fetch all the user groups
+	 *
+	 * @return array The user groups
+	 *
+	 * @since __DEPLOY_VERSION__
+	 */
+	public function getUserGroups() {
+		$groups = UserGroupsHelper::getInstance()->getAll();
+
+		foreach ($groups as $key => $value) {
+
+			if ($value->rgt) {
+				unset($value->lft);
+			}
+			if ($value->rgt) {
+				unset($value->rgt);
+			}
+		}
+		return $groups;
 	}
 }

@@ -62,6 +62,7 @@ class HtmlView extends BaseHtmlView
 
 		// Get enabled adapters
 		$this->providers = $this->get('Providers');
+		$this->userGroups = $this->get('userGroups');
 
 		// Check that there are providers
 		if (!count($this->providers))

@@ -11,6 +11,7 @@ namespace Joomla\Plugin\Filesystem\Virtual\Adapter;
 
 \defined('_JEXEC') or die;
 
+use Joomla\CMS\Access\Access;
 use Joomla\CMS\Categories\Categories;
 use Joomla\CMS\Categories\CategoryNode;
 use Joomla\CMS\Component\ComponentHelper;
@@ -472,6 +473,7 @@ class VirtualAdapter implements AdapterInterface
 	 * - mime_type:     The mime type
 	 * - width:         The width, when available
 	 * - height:        The height, when available
+	 * - permission     The permissions set in this item, when core.admin
 	 *
 	 * @param CategoryNode $folder
 	 *
@@ -499,6 +501,18 @@ class VirtualAdapter implements AdapterInterface
 		$obj->modified_date           = $modifiedDate->format('c', true);
 		$obj->modified_date_formatted = HTMLHelper::_('date', $modifiedDate, Text::_('DATE_FORMAT_LC5'));
 
+		$obj->permissions = [];
+
+		if ($folder->asset_id > 0 && Factory::getUser()->authorise('core.admin', 'com_media'))
+		{
+			$permissions = Access::getAssetRules($folder->asset_id, false, false)->getData();
+
+			foreach ($permissions as $name => $permission)
+			{
+				$obj->permissions[$name] = $permission->getData();
+			}
+		}
+
 		return $obj;
 	}
 
@@ -516,6 +530,7 @@ class VirtualAdapter implements AdapterInterface
 	 * - width:         The width, when available
 	 * - height:        The height, when available
 	 * - thumb_path     The thumbnail path of file, when available
+	 * - permission     The permissions set in this item, when core.admin
 	 *
 	 * @param   string  $path  The folder
 	 *
@@ -562,6 +577,18 @@ class VirtualAdapter implements AdapterInterface
 
 			// Todo : Change this path to an actual thumbnail path
 			$obj->thumb_path = $this->getUrl($path);
+		}
+
+		$obj->permissions = [];
+
+		if ($file->asset_id > 0 && Factory::getUser()->authorise('core.admin', 'com_media'))
+		{
+			$permissions = Access::getAssetRules($file->asset_id, false, false)->getData();
+
+			foreach ($permissions as $name => $permission)
+			{
+				$obj->permissions[$name] = $permission->getData();
+			}
 		}
 
 		return $obj;

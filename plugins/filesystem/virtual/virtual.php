@@ -9,8 +9,11 @@
 
 defined('_JEXEC') or die;
 
+use Joomla\CMS\Access\Access;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Filesystem\Path;
+use Joomla\CMS\Helper\UserGroupsHelper;
+use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Plugin\CMSPlugin;
 use Joomla\Component\Media\Administrator\Event\MediaProviderEvent;
@@ -45,6 +48,32 @@ class PlgFileSystemVirtual extends CMSPlugin implements ProviderInterface
 	 */
 	public function onSetupProviders(MediaProviderEvent $event)
 	{
+		if (Factory::getUser()->authorise('core.admin', 'com_media'))
+		{
+			$fileactions = Access::getActionsFromFile(
+				JPATH_ADMINISTRATOR . '/components/com_media/access.xml',
+				"/access/section[@name='file']/"
+			);
+
+			$categoryactions = Access::getActionsFromFile(
+				JPATH_ADMINISTRATOR . '/components/com_media/access.xml',
+				"/access/section[@name='category']/"
+			);
+
+			$accesslevels = HTMLHelper::_('access.assetgroups');
+
+			$usergroups = UserGroupsHelper::getInstance()->getAll();
+
+			$config = [
+				'filepermissionactions' => $fileactions,
+				'categorypermissionactions' => $categoryactions,
+				'accesslevels' => $accesslevels,
+				'usergroups' => array_values($usergroups)
+			];
+	
+			Factory::getDocument()->addScriptOptions('com_media', $config);
+		}
+
 		$event->getProviderManager()->registerProvider($this);
 	}
 

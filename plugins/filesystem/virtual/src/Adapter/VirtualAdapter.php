@@ -21,6 +21,7 @@ use Joomla\CMS\Filesystem\File;
 use Joomla\CMS\Filesystem\Folder;
 use Joomla\CMS\Filesystem\Path;
 use Joomla\CMS\Filter\OutputFilter;
+use Joomla\CMS\Helper\ContentHelper;
 use Joomla\CMS\Helper\MediaHelper;
 use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Image\Image;
@@ -513,6 +514,8 @@ class VirtualAdapter implements AdapterInterface
 			}
 		}
 
+		$obj->permissions = ContentHelper::getActions('com_media', 'category', $folder->id)->getProperties();
+
 		return $obj;
 	}
 
@@ -590,6 +593,8 @@ class VirtualAdapter implements AdapterInterface
 				$obj->rules[$name] = $rule->getData();
 			}
 		}
+
+		$obj->permissions = ContentHelper::getActions('com_media', 'file', $file->id)->getProperties();
 
 		return $obj;
 	}

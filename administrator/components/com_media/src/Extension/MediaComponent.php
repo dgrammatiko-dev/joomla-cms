@@ -19,9 +19,25 @@ use Psr\Container\ContainerInterface;
 /**
  * Component class for com_media
  *
- * @since  4.0.0
+ * @since  __DEPLOY_VERSION__
  */
 class MediaComponent extends MVCComponent implements CategoryServiceInterface
 {
 	use CategoryServiceTrait;
+
+	/**
+	 * Adds Count Items for Category Manager.
+	 *
+	 * @param   \stdClass[]  $items    The category objects
+	 * @param   string       $section  The section
+	 *
+	 * @return  void
+	 *
+	 * @since   __DEPLOY_VERSION__
+	 * @throws  \Exception
+	 */
+	public function countItems(array $items, string $section)
+	{
+		return $items;
+	}
 }

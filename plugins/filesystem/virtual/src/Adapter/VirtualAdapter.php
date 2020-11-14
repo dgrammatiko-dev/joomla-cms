@@ -501,15 +501,15 @@ class VirtualAdapter implements AdapterInterface
 		$obj->modified_date           = $modifiedDate->format('c', true);
 		$obj->modified_date_formatted = HTMLHelper::_('date', $modifiedDate, Text::_('DATE_FORMAT_LC5'));
 
-		$obj->permissions = [];
+		$obj->rules = [];
 
 		if ($folder->asset_id > 0 && Factory::getUser()->authorise('core.admin', 'com_media'))
 		{
-			$permissions = Access::getAssetRules($folder->asset_id, false, false)->getData();
+			$rules = Access::getAssetRules($folder->asset_id, false, false)->getData();
 
-			foreach ($permissions as $name => $permission)
+			foreach ($rules as $name => $rule)
 			{
-				$obj->permissions[$name] = $permission->getData();
+				$obj->rules[$name] = $rule->getData();
 			}
 		}
 
@@ -579,15 +579,15 @@ class VirtualAdapter implements AdapterInterface
 			$obj->thumb_path = $this->getUrl($path);
 		}
 
-		$obj->permissions = [];
+		$obj->rules = [];
 
 		if ($file->asset_id > 0 && Factory::getUser()->authorise('core.admin', 'com_media'))
 		{
-			$permissions = Access::getAssetRules($file->asset_id, false, false)->getData();
+			$rules = Access::getAssetRules($file->asset_id, false, false)->getData();
 
-			foreach ($permissions as $name => $permission)
+			foreach ($rules as $name => $rule)
 			{
-				$obj->permissions[$name] = $permission->getData();
+				$obj->rules[$name] = $rule->getData();
 			}
 		}
 

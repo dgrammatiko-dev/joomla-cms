@@ -233,7 +233,7 @@ class VirtualAdapter implements AdapterInterface
 		return $files;
 	}
 
-	protected function loadCategoryTable($path)
+	protected function loadCategoryTable(string $path)
 	{
 		$categoryTable = Factory::getApplication()->bootComponent('Categories')->getMVCFactory()->createModel('Category', 'Administrator', ['ignore_request' => true])->getTable('Category');
 

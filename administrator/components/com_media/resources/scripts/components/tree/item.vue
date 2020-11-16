@@ -12,9 +12,12 @@
       <span class="item-icon"><span :class="iconClass" /></span>
       <span class="item-name">{{ item.name }}</span>
     </a>
-    <a>
-      <span @click.stop.prevent="onItemPermissionClick()" class="item-permissions">permissions</span>
-    </a>
+    <template v-if="hasPermissions">
+      {{console.log(item)}}
+      <a>
+        <span @click.stop.prevent="onItemPermissionClick()" class="fas fa-unlock" aria-label="permissions"></span>
+      </a>
+    </template>
     <transition name="slide-fade">
       <media-tree
         v-if="hasChildren"
@@ -53,19 +56,17 @@ export default {
     },
   },
   computed: {
-    /* Whether or not the item is active */
+    console: () => console,
+    window: () => window,
+    hasPermissions() {
+      return this.item.adapter && this.item.adapter.startsWith('virtual-')
+    },
     isActive() {
       return (this.item.path === this.$store.state.selectedDirectory);
     },
-    /**
-             * Whether or not the item is open
-             *
-             * @return  boolean
-             */
     isOpen() {
       return this.$store.state.selectedDirectory.includes(this.item.path);
     },
-    /* Whether or not the item has children */
     hasChildren() {
       return this.item.directories.length > 0;
     },
@@ -81,11 +82,9 @@ export default {
     },
   },
   methods: {
-    /* Handle the on item click event */
     onItemClick() {
       this.navigateTo(this.item.path);
     },
-
     onItemPermissionClick(e) {
       this.$store.commit(types.SHOW_PERMISSIONS_MODAL);
     }

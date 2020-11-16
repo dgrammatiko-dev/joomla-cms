@@ -13,8 +13,8 @@ export default {
   },
   methods: {
     /**
-         * Return the correct item type component
-         */
+     * Return the correct item type component
+     */
     itemType() {
       const imageExtensions = ['jpg', 'jpeg', 'png', 'gif'];
       const videoExtensions = ['mp4'];
@@ -37,9 +37,9 @@ export default {
     },
 
     /**
-         * Get the styles for the media browser item
-         * @returns {{}}
-         */
+     * Get the styles for the media browser item
+     * @returns {{}}
+     */
     styles() {
       return {
         width: `calc(${this.$store.state.gridSize}% - 20px)`,
@@ -47,39 +47,39 @@ export default {
     },
 
     /**
-         * Whether or not the item is currently selected
-         * @returns {boolean}
-         */
+     * Whether or not the item is currently selected
+     * @returns {boolean}
+     */
     isSelected() {
       return this.$store.state.selectedItems.some((selected) => selected.path === this.item.path);
     },
 
     /**
-         * Whether or not the item is currently active (on hover or via tab)
-         * @returns {boolean}
-         */
+     * Whether or not the item is currently active (on hover or via tab)
+     * @returns {boolean}
+     */
     isHoverActive() {
       return this.hoverActive;
     },
 
     /**
-         * Turns on the hover class
-         */
+     * Turns on the hover class
+     */
     mouseover() {
       this.hoverActive = true;
     },
 
     /**
-         * Turns off the hover class
-         */
+     * Turns off the hover class
+     */
     mouseleave() {
       this.hoverActive = false;
     },
 
     /**
-         * Handle the click event
-         * @param event
-         */
+     * Handle the click event
+     * @param event
+     */
     handleClick(event) {
       if (this.item.path && this.item.type === 'file') {
         window.parent.document.dispatchEvent(
@@ -119,9 +119,9 @@ export default {
     },
 
     /**
-         * Handle the when an element is focused in the child to display the layover for a11y
-         * @param value
-         */
+     * Handle the when an element is focused in the child to display the layover for a11y
+     * @param value
+     */
     focused(value) {
       // eslint-disable-next-line no-unused-expressions
       value ? this.mouseover() : this.mouseleave();

@@ -97,6 +97,30 @@
               />
             </button>
           </li>
+          <template v-if="hasPermissions">
+            <li>
+              <button
+                ref="actionPermissions"
+                type="button"
+                class="action-permissions"
+                :aria-label="translate('COM_MEDIA_ACTION_PERMISSIONS')"
+                :title="translate('COM_MEDIA_ACTION_PERMISSIONS')"
+                @keyup.space="openPermissionsModal()"
+                @keyup.enter="openPermissionsModal()"
+                @focus="focused(true)"
+                @blur="focused(false)"
+                @keyup.esc="hideActions()"
+                @keyup.up="$refs.actionUrl.focus()"
+                @keyup.down="$refs.actionPermissions.focus()"
+              >
+                <span
+                  class="image-browser-action fas fa-unlock"
+                  aria-hidden="true"
+                  @click.stop="openPermissionsModal()"
+                />
+              </button>
+            </li>
+          </template>
         </ul>
       </div>
     </div>
@@ -116,10 +140,22 @@ export default {
       showActions: false,
     };
   },
+  computed: {
+    console: () => console,
+    window: () => window,
+    hasPermissions() {
+      return this.item.adapter && this.item.adapter.startsWith('virtual-')
+    },
+  },
   methods: {
     /* Handle the on preview double click event */
     onPreviewDblClick() {
       this.navigateTo(this.item.path);
+    },
+    openPermissionsModal() {
+      this.$store.commit(types.UNSELECT_ALL_BROWSER_ITEMS);
+      this.$store.commit(types.SELECT_BROWSER_ITEM, this.item);
+      this.$store.commit(types.SHOW_PERMISSIONS_MODAL);
     },
     /* Opening confirm delete modal */
     openConfirmDeleteModal() {

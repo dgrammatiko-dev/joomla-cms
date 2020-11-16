@@ -5,6 +5,7 @@
     label-element="createFolderTitle"
     @close="close()"
   >
+    {{console.log(item)}}
     <template #header>
       <h3
         id="createFolderTitle"
@@ -19,9 +20,9 @@
           novalidate
           @submit.prevent="save"
         >
-          <details v-for="group in groups" :key="group">
+          <details v-for="group in groups" :key="group.title">
             <summary>{{ group.title }}</summary>
-            <div class="form-group" v-for="action in actions">
+            <div class="form-group" v-for="action in actions" :key="action.name">
               <label>{{action.name}}</label>
               <select v-bind:aria-controls="action.name">
                 <option value="">Inherit</option>
@@ -63,6 +64,11 @@ export default {
     };
   },
   computed: {
+    item() {
+      return this.$store.state.selectedItems[this.$store.state.selectedItems.length - 1];
+    },
+    console: () => console,
+    window: () => window,
     groups() {
       let groups = {};
       const groupsElement = document.getElementById('default-groups');
@@ -98,19 +104,6 @@ export default {
     },
     /* Save the form and create the folder */
     save() {
-      // Check if the form is valid
-      if (!this.isValid()) {
-        // TODO show an error message to user for insert a folder name
-        // TODO mark the field as invalid
-        return;
-      }
-
-      // Create the directory
-      this.$store.dispatch('createDirectory', {
-        name: this.folder,
-        parent: this.$store.state.selectedDirectory,
-      });
-      this.reset();
     },
     /* Reset the form */
     reset() {

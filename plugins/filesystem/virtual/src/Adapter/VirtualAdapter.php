@@ -11,6 +11,7 @@ namespace Joomla\Plugin\Filesystem\Virtual\Adapter;
 
 \defined('_JEXEC') or die;
 
+use Joomla\CMS\Access\Access;
 use Joomla\CMS\Categories\Categories;
 use Joomla\CMS\Categories\CategoryNode;
 use Joomla\CMS\Component\ComponentHelper;
@@ -20,6 +21,7 @@ use Joomla\CMS\Filesystem\File;
 use Joomla\CMS\Filesystem\Folder;
 use Joomla\CMS\Filesystem\Path;
 use Joomla\CMS\Filter\OutputFilter;
+use Joomla\CMS\Helper\ContentHelper;
 use Joomla\CMS\Helper\MediaHelper;
 use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Image\Image;
@@ -231,7 +233,7 @@ class VirtualAdapter implements AdapterInterface
 		return $files;
 	}
 
-	protected function loadCategoryTable($path)
+	protected function loadCategoryTable(string $path)
 	{
 		$categoryTable = Factory::getApplication()->bootComponent('Categories')->getMVCFactory()->createModel('Category', 'Administrator', ['ignore_request' => true])->getTable('Category');
 
@@ -472,6 +474,7 @@ class VirtualAdapter implements AdapterInterface
 	 * - mime_type:     The mime type
 	 * - width:         The width, when available
 	 * - height:        The height, when available
+	 * - permission     The permissions set in this item, when core.admin
 	 *
 	 * @param CategoryNode $folder
 	 *
@@ -499,6 +502,20 @@ class VirtualAdapter implements AdapterInterface
 		$obj->modified_date           = $modifiedDate->format('c', true);
 		$obj->modified_date_formatted = HTMLHelper::_('date', $modifiedDate, Text::_('DATE_FORMAT_LC5'));
 
+		$obj->rules = [];
+
+		if ($folder->asset_id > 0 && Factory::getUser()->authorise('core.admin', 'com_media'))
+		{
+			$rules = Access::getAssetRules($folder->asset_id, false, false)->getData();
+
+			foreach ($rules as $name => $rule)
+			{
+				$obj->rules[$name] = $rule->getData();
+			}
+		}
+
+		$obj->permissions = ContentHelper::getActions('com_media', 'category', $folder->id)->getProperties();
+
 		return $obj;
 	}
 
@@ -516,6 +533,7 @@ class VirtualAdapter implements AdapterInterface
 	 * - width:         The width, when available
 	 * - height:        The height, when available
 	 * - thumb_path     The thumbnail path of file, when available
+	 * - permission     The permissions set in this item, when core.admin
 	 *
 	 * @param   string  $path  The folder
 	 *
@@ -563,6 +581,20 @@ class VirtualAdapter implements AdapterInterface
 			// Todo : Change this path to an actual thumbnail path
 			$obj->thumb_path = $this->getUrl($path);
 		}
+
+		$obj->rules = [];
+
+		if ($file->asset_id > 0 && Factory::getUser()->authorise('core.admin', 'com_media'))
+		{
+			$rules = Access::getAssetRules($file->asset_id, false, false)->getData();
+
+			foreach ($rules as $name => $rule)
+			{
+				$obj->rules[$name] = $rule->getData();
+			}
+		}
+
+		$obj->permissions = ContentHelper::getActions('com_media', 'file', $file->id)->getProperties();
 
 		return $obj;
 	}
